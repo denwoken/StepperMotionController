@@ -12,8 +12,7 @@
 				"device": "STM32G071xx",
 				"svdFile": "./STM32G071.svd",
 				"configFiles": [
-					"interface/stlink.cfg",
-					"target/STM32G0x.cfg"
+					"openocd_jlink_swd.cfg"
 				],
 				"liveWatch": {
 					"enabled": true,
