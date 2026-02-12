@@ -1,0 +1,6 @@
+[ProjectGroup]
+Version=1.0
+[Project1]
+ProjectPath=.\Altium\Projects\StepperMotionController\StepperMotionController.PrjPcb
+[Project2]
+ProjectPath=Altium\StepperMotionController.PrjPcb
