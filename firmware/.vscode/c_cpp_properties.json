@@ -1,0 +1,21 @@
+{
+	"configurations": [
+		{
+			"name": "arm_c_cpp_properties",
+			"compilerPath": "C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/bin/arm-none-eabi-gcc.exe",
+			"includePath": [
+				"C:/Program Files (x86)/GNU Arm Embedded Toolchain/10 2021.10/lib/**",
+				"${workspaceFolder}/**"
+			],
+			"defines": [
+				"USE_FULL_LL_DRIVER",
+				"STM32G071xx"
+			],
+			"intelliSenseMode": "windows-gcc-arm",
+			"cStandard": "c11",
+			"cppStandard": "c++17",
+			"configurationProvider": "ms-vscode.makefile-tools"
+		}
+	],
+	"version": 4
+}

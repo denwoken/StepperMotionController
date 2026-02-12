@@ -1,0 +1,20 @@
+{
+	"terminal.integrated.smoothScrolling": true,
+	"editor.smoothScrolling": true,
+	"cortex-debug.enableTelemetry": false,
+	"cortex-debug.openocdPath": "C:/Program Files (x86)/OpenOCD/bin/openocd.exe",
+	"C_Cpp.errorSquiggles": "disabled",
+	"C_Cpp.dimInactiveRegions": false,
+	"files.associations": {
+		"*.c": "c",
+		"*.h": "c",
+		"*.cpp": "cpp",
+		"*.hpp": "cpp",
+		"array": "c",
+		"string_view": "c",
+		"initializer_list": "c",
+		"ranges": "c",
+		"utility": "c"
+	}
+
+}

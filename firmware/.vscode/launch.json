@@ -1,0 +1,25 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+				"name": "openocd",
+				"request": "launch",
+				"type": "cortex-debug",
+				"cwd": "${workspaceRoot}",
+				"preLaunchTask": "Build",
+				"servertype": "openocd",
+				"executable": "./build/StepperMotionControl.elf",
+				"device": "STM32G071xx",
+				"svdFile": "./STM32G071.svd",
+				"configFiles": [
+					"interface/stlink.cfg",
+					"target/STM32G0x.cfg"
+				],
+				"liveWatch": {
+					"enabled": true,
+					"samplesPerSecond": 1
+				},
+				"showDevDebugOutput": "none"
+		}
+	]
+}
