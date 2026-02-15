@@ -129,6 +129,8 @@ void StartDefaultTask(void const * argument)
 
   ModbusRTU_Init(modbus,
           USART1,
+          //NULL, 0,
+          //NULL, 0,
           DMA1, LL_DMA_CHANNEL_1,
           DMA1, LL_DMA_CHANNEL_2,
           1);

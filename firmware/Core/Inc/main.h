@@ -69,6 +69,28 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define DRV1_DIR_Pin LL_GPIO_PIN_0
+#define DRV1_DIR_GPIO_Port GPIOC
+#define DRV1_NEN_Pin LL_GPIO_PIN_2
+#define DRV1_NEN_GPIO_Port GPIOC
+#define DRV5_NEN_Pin LL_GPIO_PIN_3
+#define DRV5_NEN_GPIO_Port GPIOC
+#define DRV5_DIR_Pin LL_GPIO_PIN_1
+#define DRV5_DIR_GPIO_Port GPIOA
+#define DRV2_DIR_Pin LL_GPIO_PIN_5
+#define DRV2_DIR_GPIO_Port GPIOA
+#define DRV2_NEN_Pin LL_GPIO_PIN_7
+#define DRV2_NEN_GPIO_Port GPIOA
+#define DRV4_NEN_Pin LL_GPIO_PIN_15
+#define DRV4_NEN_GPIO_Port GPIOB
+#define DRV4_DIR_Pin LL_GPIO_PIN_9
+#define DRV4_DIR_GPIO_Port GPIOA
+#define ENC_BTN_Pin LL_GPIO_PIN_8
+#define ENC_BTN_GPIO_Port GPIOD
+#define DRV3_NEN_Pin LL_GPIO_PIN_0
+#define DRV3_NEN_GPIO_Port GPIOD
+#define DRV3_DIR_Pin LL_GPIO_PIN_2
+#define DRV3_DIR_GPIO_Port GPIOD
 
 /* USER CODE BEGIN Private defines */
 

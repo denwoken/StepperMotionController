@@ -41,9 +41,11 @@ void MX_USART1_UART_Init(void)
   LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_USART1);
 
   LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOC);
+  LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
   /**USART1 GPIO Configuration
   PC4   ------> USART1_TX
   PC5   ------> USART1_RX
+  PA12 [PA10]   ------> USART1_DE
   */
   GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
   GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
@@ -60,6 +62,14 @@ void MX_USART1_UART_Init(void)
   GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
   GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
   LL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = LL_GPIO_PIN_12;
+  GPIO_InitStruct.Mode = LL_GPIO_MODE_ALTERNATE;
+  GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+  GPIO_InitStruct.Alternate = LL_GPIO_AF_1;
+  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /* USART1 DMA Init */
 
@@ -105,7 +115,7 @@ void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   USART_InitStruct.PrescalerValue = LL_USART_PRESCALER_DIV1;
-  USART_InitStruct.BaudRate = 115200;
+  USART_InitStruct.BaudRate = 256000;
   USART_InitStruct.DataWidth = LL_USART_DATAWIDTH_8B;
   USART_InitStruct.StopBits = LL_USART_STOPBITS_1;
   USART_InitStruct.Parity = LL_USART_PARITY_NONE;
@@ -115,10 +125,16 @@ void MX_USART1_UART_Init(void)
   LL_USART_Init(USART1, &USART_InitStruct);
   LL_USART_SetTXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_8_8);
   LL_USART_SetRXFIFOThreshold(USART1, LL_USART_FIFOTHRESHOLD_8_8);
+  LL_USART_EnableDEMode(USART1);
+  LL_USART_SetDESignalPolarity(USART1, LL_USART_DE_POLARITY_HIGH);
+  LL_USART_SetDEAssertionTime(USART1, 0);
+  LL_USART_SetDEDeassertionTime(USART1, 0);
   LL_USART_EnableFIFO(USART1);
   LL_USART_ConfigAsyncMode(USART1);
 
   /* USER CODE BEGIN WKUPType USART1 */
+  LL_USART_SetDEAssertionTime(USART1,28); //12 -115200   24- 256000
+  LL_USART_SetDEDeassertionTime(USART1, 0);
 
   /* USER CODE END WKUPType USART1 */
 

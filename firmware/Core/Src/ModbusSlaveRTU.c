@@ -8,11 +8,12 @@
 
 #include "stm32g0xx_ll_dma.h"
 #include "usart.h"
+#include "tim.h"
 
 #include <assert.h>
 #include "config.h"
 
-#define HREG_COUNT 16 //Numer of Hold Registers
+#define HREG_COUNT 256 //Numer of Hold Registers
 #define COIL_COUNT 16 //Numer of Coils
 #define DINP_COUNT 16 //Numer of Discrete Inputs
 #define IREG_COUNT 16 //Numer of (Input Registers
@@ -284,7 +285,7 @@ void ModbusRTU_Init(ModbusRTU_t *ctx,
 	xTaskCreate(
 		modbusSlaveRTU_task, 
 		"ModbusRTU", 
-		128, 
+		256, 
 		ctx, 
 		MODBUS_TASK_PRIORITY, 
 		&ctx->taskHandle
@@ -353,6 +354,7 @@ void ModbusRTU_Transmit(ModbusRTU_t *ctx, const uint8_t *data, uint16_t size)
 	assert(ctx);
 	assert(data);
 
+	LL_USART_ClearFlag_TC(ctx->uart);
 	if (ctx->dma_tx == NULL) 
     {
  		for(uint16_t i = 0; i < size; i++)
@@ -376,6 +378,7 @@ void ModbusRTU_Transmit(ModbusRTU_t *ctx, const uint8_t *data, uint16_t size)
 		LL_USART_EnableDMAReq_TX(ctx->uart);   // Соединяем UART с DMA
 
 		ModbusRTU_dmaTxCplt_wait(ctx); // Ждем окончания передачи
+		//while(!LL_USART_IsActiveFlag_TC(ctx->uart));
 	}
 }
 void ModbusRTU_Receive(ModbusRTU_t *ctx, uint8_t *data, uint16_t maxSize, uint16_t* rxLen){
