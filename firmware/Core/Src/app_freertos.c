@@ -141,8 +141,8 @@ void StartDefaultTask(void const * argument)
   StepperMotor* motor = StepperMotor_create();
   motor->init(motor, TIM15, GPIOC, 0);
   controller->addMotor(controller, motor);
-  motor->max_velocity =  256000;//(200*64) * 31;
-  motor->max_acceleration = (200*64) * 24;
+  motor->parameters.max_velocity =  256000;//(200*64) * 31;
+  motor->parameters.max_acceleration = (200*64) * 2; //(200*64) * 24
 
   controller->init(controller, TIM6);
   controller->startTimer(controller);
@@ -156,13 +156,13 @@ void StartDefaultTask(void const * argument)
     osDelay(2);
 
     portENTER_CRITICAL();
-    if(motor->remaining_steps == 0 && motor->current_velocity == 0){//
+    if(motor->parameters.remaining_steps == 0 && motor->parameters.current_velocity == 0){//
       //motor1.d_set = -motor1.d_set;
       // portEXIT_CRITICAL();
       // osDelay(2000);
       // portENTER_CRITICAL();
-      motor->remaining_steps = 64*dir;
-      //motor->remaining_steps = (200*64) *1* dir;
+      motor->parameters.remaining_steps = 128*dir;
+      //motor->parameters.remaining_steps = (200*64) *1* dir;
       if(dir == 1) dir = -1; else dir = 1;
     }
     portEXIT_CRITICAL();

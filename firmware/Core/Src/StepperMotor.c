@@ -26,25 +26,26 @@ static inline int32_t _max(int32_t a, int32_t b){ return a > b ? a : b; }
 
 // methods
 static void StepperMotor_update(StepperMotor* m){
+	StepperMotorParameters* p = &m->parameters;
 	portENTER_CRITICAL();
 
-	int8_t direction = (m->remaining_steps > 0) ? (1) : (-1);
+	int8_t direction = (p->remaining_steps > 0) ? (1) : (-1);
 
 
 	// Расчет дистанции торможения (правильная формула)
 	// s = v² / (2 * a)
 	int64_t brake_distance = 0;
-	if (m->max_acceleration > 0) {
-		brake_distance = ((int64_t)m->current_velocity * (int64_t)m->current_velocity);
-		brake_distance /= (2 * m->max_acceleration);
+	if (p->max_acceleration > 0) {
+		brake_distance = ((int64_t)p->current_velocity * (int64_t)p->current_velocity);
+		brake_distance /= (2 * p->max_acceleration);
 	} else 
 		brake_distance = INT64_MAX;
-	int32_t abs_remaining = _abs(m->remaining_steps);
+	int32_t abs_remaining = _abs(p->remaining_steps);
 
 	
 
 	// ускорение за тик + аккумулируем значение если дробное
-	int32_t total_acc = m->max_acceleration + m->accelerationAccumulated; 
+	int32_t total_acc = p->max_acceleration + m->accelerationAccumulated; 
 	int32_t accel_per_tick =  total_acc / 1000;
 	m->accelerationAccumulated = total_acc % 1000;
 
@@ -53,20 +54,20 @@ static void StepperMotor_update(StepperMotor* m){
 	if ( abs_remaining <= brake_distance )
 	{ // шагов нужно выполнить меньше чем нужно для тормаения
 		//  ==> тормозим
-		m->current_velocity = _max(0, m->current_velocity - accel_per_tick);		
+		p->current_velocity = _max(0, p->current_velocity - accel_per_tick);		
 	}
-	else if (m->current_velocity < m->max_velocity){
+	else if (p->current_velocity < p->max_velocity){
 		// или если это не максимальная скорость  ==> ускоряемся
-		m->current_velocity = _min(m->max_velocity, m->current_velocity + accel_per_tick);		
+		p->current_velocity = _min(p->max_velocity, p->current_velocity + accel_per_tick);		
 	}
-	else if (m->current_velocity > m->max_velocity)
+	else if (p->current_velocity > p->max_velocity)
 	{ // если vmax изменили в меньшую сторону ==> тормозим
-		m->current_velocity = _max(m->max_velocity, m->current_velocity - accel_per_tick);
+		p->current_velocity = _max(p->max_velocity, p->current_velocity - accel_per_tick);
 	}
 
 
 	// шаги/тик + аккумулируем значение если дробное
-	int32_t total_vel = m->current_velocity + m->velocityAccumulated;
+	int32_t total_vel = p->current_velocity + m->velocityAccumulated;
 	int32_t vel_per_tick = total_vel / 1000;
 	m->velocityAccumulated = total_vel % 1000;
 
@@ -83,16 +84,16 @@ static void StepperMotor_update(StepperMotor* m){
 		//выбор направления двиения
 		if(direction == 1){ 
 			LL_GPIO_SetOutputPin(m->dir_port, m->dir_pin_Msk);
-			m->remaining_steps -= steps_to_move;
-			m->move_total_steps += steps_to_move;
+			p->remaining_steps -= steps_to_move;
+			p->move_total_steps += steps_to_move;
 		} else {
 			LL_GPIO_ResetOutputPin(m->dir_port, m->dir_pin_Msk);
-			m->remaining_steps += steps_to_move;
-			m->move_total_steps -= steps_to_move;
+			p->remaining_steps += steps_to_move;
+			p->move_total_steps -= steps_to_move;
 		}
-		if(m->remaining_steps == 0 ){
+		if(p->remaining_steps == 0 ){
 			//LL_GPIO_ResetOutputPin(m->dir_port, m->dir_pin_Msk);// дебаг
-			m->current_velocity = 0;
+			p->current_velocity = 0;
 			m->velocityAccumulated = 0;
 			m->accelerationAccumulated = 0;
 		}
@@ -164,8 +165,8 @@ StepperMotor* StepperMotor_create(){
 	assert(motor);
 	memset(motor, 0, sizeof(StepperMotor));
 	StepperMotor_setAllmethods(motor);
-	motor->max_acceleration =128000;
-	motor->max_velocity = 16000;
+	motor->parameters.max_acceleration =128000;
+	motor->parameters.max_velocity = 16000;
 	return motor;
 }
 
