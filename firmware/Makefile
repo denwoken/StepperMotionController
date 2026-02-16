@@ -86,7 +86,8 @@ Core/Src/spi.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c_ex.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi.c \
-Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi_ex.c
+Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi_ex.c \
+Core/DeviceRegisters/DeviceRegisters.c 
 
 # ASM sources
 ASM_SOURCES =  \
@@ -146,7 +147,8 @@ C_DEFS =  \
 
 # AS includes
 AS_INCLUDES =  \
--ICore/Inc
+-ICore/Inc \
+-ICore/DeviceRegisters
 
 # C includes
 C_INCLUDES =  \
