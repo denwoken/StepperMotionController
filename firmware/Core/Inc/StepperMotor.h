@@ -3,17 +3,31 @@
 #include "stm32g0xx_ll_gpio.h"
 #include "stm32g071xx.h"
 
+typedef struct {
+	int en : 1;
+}MotorControlReg;
+typedef struct {
+	int enabled : 1;
+	int running : 1;
+	int fault : 1;
+}MotorStatusReg;
 
 typedef struct{
+	MotorControlReg control;
+	MotorStatusReg status;
+	uint16_t error_code;
+	uint16_t mode;
+	uint16_t cmd;
+
 
 	uint32_t max_velocity;    	// максимальная (шаги/сек)
-	uint32_t max_acceleration; // Ускорение (шаги/сек²)
+	uint32_t max_acceleration;  // Ускорение (шаги/сек²)
 
 	int32_t current_velocity;   // Реальная текущая скорость
 	int32_t remaining_steps;    // Сколько шагов осталось в текущем перемещении
-	int32_t move_total_steps; // Общее количество выполняных шагов
+	int32_t move_total_steps;   // Общее количество выполняных шагов
 
-}StepperMotorParameters;
+}StepperMotorRegs_t;
 
 
 
@@ -26,9 +40,9 @@ struct StepperMotor_ {
 	void (*init)(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint8_t dir_pin);
 	void (*update)(StepperMotor* self);
 
-	StepperMotorParameters parameters;
+	StepperMotorRegs_t regs;
 
-			int32_t velAccumulated;  // для точного подсчета шагов при малых скоростях
+	int32_t velAccumulated;  // для точного подсчета шагов при малых скоростях
 
 
 	int32_t accelerationAccumulated;  // остаток скорости с предыдущего тика -> учесть на следующем шаге

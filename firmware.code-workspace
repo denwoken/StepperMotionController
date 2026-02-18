@@ -24,6 +24,11 @@
 				"cwd": ".\\firmware\\build",
 				"binaryPath": ".\\firmware\\build\\StepperMotionControl.elf",
 				"binaryArgs": []
+			},
+			{
+				"cwd": "d:\\Desktop\\Projects\\StepperMotionController\\firmware\\build",
+				"binaryPath": "d:\\Desktop\\Projects\\StepperMotionController\\firmware\\build\\StepperMotionControl.elf",
+				"binaryArgs": []
 			}
 		]
 	}

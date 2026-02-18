@@ -7,7 +7,7 @@
 #include "stm32g0xx_ll_tim.h"
 #include "stm32g0xx_ll_gpio.h"
 
-#define MAX_STEPPER_MOTOR_COUNT 6
+#include "DeviceRegistersMapper.h"
 
 
 

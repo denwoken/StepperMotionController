@@ -129,11 +129,14 @@ void StartDefaultTask(void const * argument)
 
   ModbusRTU_Init(modbus,
           USART1,
-          //NULL, 0,
-          //NULL, 0,
+#if USE_DMA_FOR_USART1_MODBUS == 0
+          NULL, 0,
+          NULL, 0,
+#else
           DMA1, LL_DMA_CHANNEL_1,
           DMA1, LL_DMA_CHANNEL_2,
-          1);
+#endif
+          MODBUS_SLAVE_ADRESS);
   
 
   StepperMotorController* controller = getStepperMotorController();  
@@ -142,7 +145,7 @@ void StartDefaultTask(void const * argument)
   motor->init(motor, TIM15, GPIOC, 0);
   controller->addMotor(controller, motor);
   motor->parameters.max_velocity =  256000;//(200*64) * 31;
-  motor->parameters.max_acceleration = (200*64) * 2; //(200*64) * 24
+  motor->parameters.max_acceleration = (200*64) * 1; //(200*64) * 24
 
   controller->init(controller, TIM6);
   controller->startTimer(controller);
@@ -156,12 +159,13 @@ void StartDefaultTask(void const * argument)
     osDelay(2);
 
     portENTER_CRITICAL();
-    if(motor->parameters.remaining_steps == 0 && motor->parameters.current_velocity == 0){//
+    if(motor->parameters.remaining_steps == 0 && 
+       motor->parameters.current_velocity == 0){//
       //motor1.d_set = -motor1.d_set;
       // portEXIT_CRITICAL();
       // osDelay(2000);
       // portENTER_CRITICAL();
-      motor->parameters.remaining_steps = 128*dir;
+      motor->parameters.remaining_steps = 512*dir;
       //motor->parameters.remaining_steps = (200*64) *1* dir;
       if(dir == 1) dir = -1; else dir = 1;
     }

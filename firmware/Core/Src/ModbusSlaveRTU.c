@@ -12,19 +12,20 @@
 
 #include <assert.h>
 #include "config.h"
+#include "DeviceRegistersMapper.h"
 
-#define HREG_COUNT 256 //Numer of Hold Registers
-#define COIL_COUNT 16 //Numer of Coils
-#define DINP_COUNT 16 //Numer of Discrete Inputs
-#define IREG_COUNT 16 //Numer of (Input Registers
+//#define HREG_COUNT 256 //Numer of Hold Registers
+//#define COIL_COUNT 16 //Numer of Coils
+//#define DINP_COUNT 16 //Numer of Discrete Inputs
+//#define IREG_COUNT 16 //Numer of (Input Registers
 
 
 
   // Регистры ModBus
-  uint16_t hregs[HREG_COUNT];
-  uint8_t  coils[COIL_COUNT/8];
-  uint16_t iregs[IREG_COUNT];
-  uint8_t  dinpt[DINP_COUNT/8];
+  //uint16_t hregs[16+64*5];
+  //uint8_t  coils[COIL_COUNT/8];
+  //uint16_t iregs[IREG_COUNT];
+  //uint8_t  dinpt[DINP_COUNT/8];
 
 
 
@@ -35,52 +36,65 @@ ModbusError registerCallback(
 {
   // printf("Modbus registerCallback: type=%d, query=%d, index=%d, value=%d, function=%d\r\n",
   //   args->type, args->query, args->index, args->value, args->function);
+	result->exceptionCode = MODBUS_EXCEP_NONE;
+	result->value = 0;
+
+	uint8_t motor = 0;
+	reg_id_t regId = get_reg_id_by_address(args->index, &motor);
+
+	if(regId == REG__NONE ||
+		motor >= MAX_STEPPER_MOTOR_COUNT ||
+		args->type != MODBUS_HOLDING_REGISTER )
+	{
+		result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
+		return MODBUS_OK;
+	}
+
+	if(regId == REG__RESERVED){
+		// Reserved addresses: allow read as zero, forbid writes
+		if(args->query == MODBUS_REGQ_W_CHECK || args->query == MODBUS_REGQ_W){
+			result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
+		}
+		return MODBUS_OK;
+	}
+	
+
+	const reg_meta_t* meta = get_reg_meta_by_id(regId);
 
   switch (args->query)
   {
-	// All regs can be read
+	// All regs can be read except write only
 	case MODBUS_REGQ_R_CHECK:
-	if (args->index < HREG_COUNT && args->type == MODBUS_HOLDING_REGISTER)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < IREG_COUNT && args->type == MODBUS_INPUT_REGISTER)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < COIL_COUNT && args->type == MODBUS_COIL)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < DINP_COUNT && args->type == MODBUS_DISCRETE_INPUT)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else	result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
-	break;
-	  
-	// All but two last regs/coils can be written
-   case MODBUS_REGQ_W_CHECK:
-	  // if (args->index < REG_COUNT - 2)
-	if (args->index < HREG_COUNT && args->type == MODBUS_HOLDING_REGISTER)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < COIL_COUNT && args->type == MODBUS_COIL)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else	result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
-	break;
+		if(meta->access == REG_ACC_W){
+				result->exceptionCode = MODBUS_EXCEP_NONE;//MODBUS_EXCEP_ILLEGAL_ADDRESS;
+				result->value = 0;
+		}
+		break;
+
+	// 
+  case MODBUS_REGQ_W_CHECK:
+		if(meta->access == REG_ACC_R)
+			result->exceptionCode = MODBUS_EXCEP_NACK;
+		break;
 
 	// Read registers
 	case MODBUS_REGQ_R:
-	  switch (args->type)
-	  {
-		case MODBUS_HOLDING_REGISTER: result->value = hregs[args->index]; break;
-		case MODBUS_INPUT_REGISTER: result->value = iregs[args->index]; break;
-		case MODBUS_COIL: result->value = modbusMaskRead(coils, args->index); break;
-		case MODBUS_DISCRETE_INPUT: result->value = modbusMaskRead(dinpt, args->index); break;
-	  }
+		if(meta->access == REG_ACC_W){// нельзя чиать из регистра
+			result->value = 0;
+			break;
+		}
+
+		//result->value = hregs[args->index];
 	  break;
 
 	// Write registers
 	case MODBUS_REGQ_W:
-	  switch (args->type)
-	  {
-		case MODBUS_HOLDING_REGISTER:
-		{ 
-		  hregs[args->index] = args->value;
-		  break;
-		  }
-		case MODBUS_COIL: modbusMaskWrite(coils, args->index, args->value); break;
-		default: abort(); break;
-	  }
+
+		//hregs[args->index] = args->value;
 	  break;
   }
-	//GPIOA->ODR=coils[0];
+
+
   return MODBUS_OK;
 }
 

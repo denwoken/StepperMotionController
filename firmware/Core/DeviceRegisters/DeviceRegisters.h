@@ -3,9 +3,17 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
 
 #define REG_BASE_ADDRESS 40000U
 #define REG_MOTOR_STRIDE_WORDS 64U
+#define REG_MOTOR_STRIDE_WORDS_BITS 6U
 #define REG_MOTOR_BLOCK_START 16U
 
 /* Register access level: read/write/read-write */
@@ -29,6 +37,7 @@ typedef enum {
     REG_ERROR_CODE = 2,
     REG_MODE = 3,
     REG_CMD = 4,
+    
     REG_CURRENT_POS_16 = 5,
     REG_CURRENT_VELOCITY_16 = 6,
     REG_CURRENT_ACCEL_16 = 7,
@@ -43,7 +52,9 @@ typedef enum {
     REG_MAX_VELOCITY_32 = 16,
     REG_MAX_ACCEL_32 = 17,
     REG_MOVE_POS_REL_32 = 18,
-    REG__COUNT = 19
+    REG__COUNT = 19,
+    REG__NONE = -1,
+    REG__RESERVED = -2
 } reg_id_t;
 
 /* Optional: offsets inside motor block (in 16-bit registers) */
@@ -89,6 +100,7 @@ typedef enum {
 
 typedef struct {
     reg_id_t     id;
+    bool         motorReg;
     uint16_t     index;      /* index in motor block (16-bit registers) */
     uint16_t     size;       /* size in bytes */
     reg_type_t   type;       /* reg data type */
@@ -101,12 +113,19 @@ typedef struct {
 extern const reg_meta_t g_reg_meta[REG__COUNT];
 
 /* Get absolute Modbus address for motor (motor is 0..N). */
-static inline uint32_t reg_address(uint8_t motor, reg_id_t id)
+inline uint32_t reg_address(const uint8_t motor, const reg_id_t id)
 {
     /* address = BASE + motor offset + motor*STRIDE + index */
     return (uint32_t)REG_BASE_ADDRESS + (uint32_t)REG_MOTOR_BLOCK_START + 
            (uint32_t)(motor * (uint32_t)REG_MOTOR_STRIDE_WORDS) + (uint32_t)g_reg_meta[id].index;
 }
 
-const reg_meta_t* reg_get_meta(reg_id_t id);
+const reg_meta_t* get_reg_meta_by_id(reg_id_t id);
+const reg_id_t get_reg_id_by_address(uint16_t address,
+                                     uint8_t *out_motor);
 
+
+
+#ifdef __cplusplus
+}
+#endif

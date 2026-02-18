@@ -160,8 +160,8 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32G0xx/Include \
 -IDrivers/CMSIS/Include \
 -IMiddlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS \
--IMiddlewares/lightmodbus
-
+-IMiddlewares/lightmodbus \
+-ICore/DeviceRegisters
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
