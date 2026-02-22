@@ -23,7 +23,7 @@ struct StepperMotorController_ {
 	void (*updateMotorsISR)(StepperMotorController* self);
 	void (*notifyTaskISR)(StepperMotorController* self, BaseType_t *pxHigherPriorityTaskWoken );
 
-	
+	DeviceRegs_t deviceRegisters;
 
 	StepperMotor* motors[MAX_STEPPER_MOTOR_COUNT];
 	uint8_t motorCount;

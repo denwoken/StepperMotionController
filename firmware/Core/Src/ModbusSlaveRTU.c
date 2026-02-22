@@ -11,21 +11,10 @@
 #include "tim.h"
 
 #include <assert.h>
+#include <string.h>
 #include "config.h"
 #include "DeviceRegistersMapper.h"
-
-//#define HREG_COUNT 256 //Numer of Hold Registers
-//#define COIL_COUNT 16 //Numer of Coils
-//#define DINP_COUNT 16 //Numer of Discrete Inputs
-//#define IREG_COUNT 16 //Numer of (Input Registers
-
-
-
-  // Регистры ModBus
-  //uint16_t hregs[16+64*5];
-  //uint8_t  coils[COIL_COUNT/8];
-  //uint16_t iregs[IREG_COUNT];
-  //uint8_t  dinpt[DINP_COUNT/8];
+#include "StepperMotorController.h"
 
 
 
@@ -34,68 +23,107 @@ ModbusError registerCallback(
   const ModbusRegisterCallbackArgs *args,
   ModbusRegisterCallbackResult *result)
 {
-  // printf("Modbus registerCallback: type=%d, query=%d, index=%d, value=%d, function=%d\r\n",
-  //   args->type, args->query, args->index, args->value, args->function);
+	ModbusRTU_t *ctx = (ModbusRTU_t *)modbusSlaveGetUserPointer(slave);
 	result->exceptionCode = MODBUS_EXCEP_NONE;
 	result->value = 0;
 
 	uint8_t motor = 0;
 	reg_id_t regId = get_reg_id_by_address(args->index, &motor);
 
-	if(regId == REG__NONE ||
-		motor >= MAX_STEPPER_MOTOR_COUNT ||
-		args->type != MODBUS_HOLDING_REGISTER )
+	if (!ctx || regId == REG__NONE || args->type != MODBUS_HOLDING_REGISTER)
 	{
-		result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
+		set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
 		return MODBUS_OK;
 	}
 
 	if(regId == REG__RESERVED){
 		// Reserved addresses: allow read as zero, forbid writes
 		if(args->query == MODBUS_REGQ_W_CHECK || args->query == MODBUS_REGQ_W){
-			result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
+			set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
 		}
 		return MODBUS_OK;
 	}
-	
 
 	const reg_meta_t* meta = get_reg_meta_by_id(regId);
+	if (meta->motorReg && motor >= ctx->regmap.motor_count) {
+		set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
+		return MODBUS_OK;
+	}
 
-  switch (args->query)
-  {
-	// All regs can be read except write only
+	reg_access_t access = REG_ACC_R;
+	if (!regmap_get_access(motor, regId, &access)) {
+		set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
+		return MODBUS_OK;
+	}
+
+	const reg_word_index_t word = regmap_word_index(args->index, motor, regId);
+
+	if (meta->size == 4u) {
+		if (args->query == MODBUS_REGQ_R_CHECK || args->query == MODBUS_REGQ_R) {
+			if (!ctx->req.valid || !regmap_req_covers_u32(ctx->req.index, ctx->req.count, motor, regId)) {
+				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
+				return MODBUS_OK;
+			}
+		} else {
+			if (ctx->req.function != 16u || !ctx->req.valid || !regmap_req_covers_u32(ctx->req.index, ctx->req.count, motor, regId)) {
+				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
+				return MODBUS_OK;
+			}
+		}
+	}
+
+	switch (args->query)
+	{
 	case MODBUS_REGQ_R_CHECK:
-		if(meta->access == REG_ACC_W){
-				result->exceptionCode = MODBUS_EXCEP_NONE;//MODBUS_EXCEP_ILLEGAL_ADDRESS;
-				result->value = 0;
+		if(access == REG_ACC_W){
+			result->exceptionCode = MODBUS_EXCEP_NONE;
+			result->value = 0;
 		}
 		break;
 
-	// 
-  case MODBUS_REGQ_W_CHECK:
-		if(meta->access == REG_ACC_R)
-			result->exceptionCode = MODBUS_EXCEP_NACK;
+	case MODBUS_REGQ_W_CHECK:
+		if(access == REG_ACC_R)
+			set_exception(ctx, result, MODBUS_EXCEP_NACK);
 		break;
 
-	// Read registers
 	case MODBUS_REGQ_R:
-		if(meta->access == REG_ACC_W){// нельзя чиать из регистра
+		if(access == REG_ACC_W){
 			result->value = 0;
 			break;
 		}
+		result->value = regmap_read_snapshot(&ctx->regmap, motor, regId, word);
+		break;
 
-		//result->value = hregs[args->index];
-	  break;
-
-	// Write registers
 	case MODBUS_REGQ_W:
+		if(access == REG_ACC_R){
+			set_exception(ctx, result, MODBUS_EXCEP_NACK);
+			break;
+		}
+		if (meta->size == 2u) {
+			if (!regmap_write_u16_direct(&ctx->regmap, motor, regId, args->value)) {
+				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
+			}
+		} else if (meta->size == 4u) {
+			if (word != REG_WORD_LO) break;
+			uint16_t lo = 0u;
+			uint16_t hi = 0u;
+			if (!modbus_req_get_u16(ctx, args->index, &lo) ||
+			    !modbus_req_get_u16(ctx, (uint16_t)(args->index + 1u), &hi)) {
+				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
+				break;
+			}
+			uint32_t v = (uint32_t)lo | ((uint32_t)hi << 16);
+			if (!regmap_write_u32_direct(&ctx->regmap, motor, regId, v)) {
+				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
+			}
+		} else {
+			set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
+		}
 
-		//hregs[args->index] = args->value;
-	  break;
-  }
+		break;
+	}
 
-
-  return MODBUS_OK;
+	return MODBUS_OK;
 }
 
 
@@ -108,10 +136,7 @@ static ModbusError slaveExceptionCallback(const ModbusSlave *slave, uint8_t func
   return MODBUS_OK;// Always return MODBUS_OK
 }
 
-static ModbusError staticAllocator(
-  ModbusBuffer *buffer,
-  uint16_t size,
-  void *context)
+static ModbusError staticAllocator(ModbusBuffer *buffer, uint16_t size,void *context)
 {
 	ModbusRTU_t *ctx = (ModbusRTU_t*)context;
 	if(ctx){
@@ -133,13 +158,11 @@ static ModbusError staticAllocator(
 
 
 
-
-
 static modbusSlaveRTU_task(void* pvParameters){
 	ModbusRTU_t *ctx = (ModbusRTU_t *)pvParameters;
 	assert(ctx);
 
-	// while(1){		// тест uart + dma
+	// while(1){		// uart + dma test
 	// 	uint16_t recv_len = 0;
 	// 	ModbusRTU_Receive(ctx, ctx->rxBuf, sizeof(ctx->rxBuf), &recv_len);
 	// 	memcpy(ctx->txBuf, ctx->rxBuf, recv_len);
@@ -152,18 +175,18 @@ static modbusSlaveRTU_task(void* pvParameters){
 
 		uint16_t recv_len = 0;
 		ModbusRTU_Receive(ctx, ctx->rxBuf, sizeof(ctx->rxBuf), &recv_len);
-	
-		//memset(buff, 0, sizeof(buff));
-		//memcpy(buff, buf, len);
-		//printf("modbus request: %s, len=%d\r\n", buff, len);
 		
-		//taskENTER_CRITICAL(); // защита регистров на время парсинга
-		// ParceTime 50...70uS /33...44uS
-		err = modbusParseRequestRTU(&ctx->modbus,1, (uint8_t *)ctx->rxBuf, recv_len);
-		//taskEXIT_CRITICAL();
+		uint8_t addr = ctx->rxBuf[0];
+		if(addr == MODBUS_SLAVE_ADRESS || addr == 0){
+
+			modbus_prepare_request(ctx, ctx->rxBuf, recv_len);
+			err = modbusParseRequestRTU(&ctx->modbus, MODBUS_SLAVE_ADRESS, (uint8_t *)ctx->rxBuf, recv_len);
+
+		}
+		else err = MODBUS_REQUEST_ERROR(ADDRESS);
 
 		if (modbusIsOk(err)) {
-			// Отправка ответа
+			// send response
 			uint8_t *resp = (uint8_t *)modbusSlaveGetResponse(&ctx->modbus);
 			uint16_t resp_len = modbusSlaveGetResponseLength(&ctx->modbus);
 

@@ -139,6 +139,10 @@ StepperMotorController* StepperMotorController_create(){
 	assert(controller);
 	memset(controller, 0, sizeof(StepperMotorController));
 	StepperMotorController_setAllmethods(controller);
+
+	controller->deviceRegisters.device_id = 0xA7B4;
+	controller->deviceRegisters.fw_version = (0x00 << 8) | 0x01;
+	controller->deviceRegisters.motor_count = REG_MOTOR_COUNT;
 	return controller;
 }
 

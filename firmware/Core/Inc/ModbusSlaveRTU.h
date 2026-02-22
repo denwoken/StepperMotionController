@@ -6,26 +6,11 @@
 #include "semphr.h"
 #include <stdbool.h>
 
+#include "DeviceRegistersMapper.h"
 
 #include "stm32g0xx_ll_dma.h"
 #include "usart.h"
 
-/*
-class ModbusSlaveRTU {
-protected:
-	ModbusSlaveRTU();
-	~ModbusSlaveRTU();
-public:
-	ModbusSlaveRTU* Instance(){
-		static ModbusSlaveRTU instance;
-		return &instance;
-	}
-
-
-private: 
-};
-*/
-/**/
 
 
 typedef struct {

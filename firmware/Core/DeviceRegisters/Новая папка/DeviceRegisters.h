@@ -37,7 +37,6 @@ typedef enum {
     REG_ERROR_CODE = 2,
     REG_MODE = 3,
     REG_CMD = 4,
-    
     REG_CURRENT_POS_16 = 5,
     REG_CURRENT_VELOCITY_16 = 6,
     REG_CURRENT_ACCEL_16 = 7,
