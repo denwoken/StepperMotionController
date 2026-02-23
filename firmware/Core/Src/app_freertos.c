@@ -142,11 +142,27 @@ void StartDefaultTask(void const * argument)
 
   StepperMotorController* controller = getStepperMotorController();  
 
-  StepperMotor* motor = StepperMotor_create();
-  motor->init(motor, TIM15, GPIOC, 0);
+
+
+  StepperMotor* motor;
+  motor = StepperMotor_create();
+  motor->init(motor, TIM15, 
+    DRV1_DIR_GPIO_Port, DRV1_DIR_Pin, 
+    DRV1_NEN_GPIO_Port, DRV1_NEN_Pin);
   controller->addMotor(controller, motor);
-  motor->parameters.max_velocity =  100000;//(200*64) * 31;
-  motor->parameters.max_acceleration = (200*64) * 1; //(200*64) * 24
+
+  
+  motor = StepperMotor_create();
+  motor->init(motor, TIM16, 
+    DRV2_DIR_GPIO_Port, DRV2_DIR_Pin, 
+    DRV2_NEN_GPIO_Port, DRV2_NEN_Pin);
+  controller->addMotor(controller, motor);
+
+  motor = StepperMotor_create();
+  motor->init(motor, TIM17, 
+    DRV3_DIR_GPIO_Port, DRV3_DIR_Pin, 
+    DRV3_NEN_GPIO_Port, DRV3_NEN_Pin);
+  controller->addMotor(controller, motor);
 
   controller->init(controller, TIM6);
   controller->startTimer(controller);

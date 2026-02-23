@@ -46,13 +46,18 @@ static inline wordData pack_word_data(const reg_meta_t* meta, int32_t s, uint32_
 	return out;
 }
 */
-static void apply_control(StepperMotorParameters* p, uint16_t value)
+static void apply_control(StepperMotor* m, uint16_t value)
 {
+	StepperMotorParameters* p = &m->parameters;
+	
 	// TODO: implement full control behavior (enable/disable, etc.)
 	p->control.raw = value;
 
+	m->setEnable(m, (bool)(value & MOTOR_CONTROL_EN_MASK));
+
 	// Simple sketch: mirror enable bit into status and stop on disable.
-	if ((value & MOTOR_CONTROL_EN_MASK) == 0u) {
+	if ((value & MOTOR_CONTROL_EN_MASK)) {
+		
 		// p->remaining_steps = 0;
 		// p->current_velocity = 0;
 		// p->current_acceleration = 0;
@@ -63,16 +68,18 @@ static void apply_control(StepperMotorParameters* p, uint16_t value)
 	//p->status.bits.enabled = (value & MOTOR_CONTROL_EN_MASK) ? 1u : 0u;
 }
 
-static void apply_mode(StepperMotorParameters* p, uint16_t value)
+static void apply_mode(StepperMotor* m, uint16_t value)
 {
+	StepperMotorParameters* p = &m->parameters;
 	// TODO: define mode semantics (position/velocity/step, etc.)
 	p->mode = value;
 }
 
 
 #if defined(REG_ID_CMD)
-static void apply_cmd(StepperMotorParameters* p, uint16_t value)
+static void apply_cmd(StepperMotor* m, uint16_t value)
 {
+	const StepperMotorParameters* p = &m->parameters;
 	// Write-only command register sketch.
 	// TODO: replace with real command decoding.
 	p->cmd = value;
@@ -199,10 +206,10 @@ bool writeRegisterData(uint8_t motor, const reg_meta_t* meta, wordData value)
 	StepperMotorParameters* p = &m->parameters;
 
 	switch (meta->id) {
-	case REG_ID_CONTROL: apply_control(p, value.u16); return true;
-	case REG_ID_MODE: apply_mode(p, value.u16); return true;
+	case REG_ID_CONTROL: apply_control(m, value.u16); return true;
+	case REG_ID_MODE: apply_mode(m, value.u16); return true;
 #if defined(REG_ID_CMD)
-	case REG_ID_CMD: apply_cmd(p, value.u16); return true;
+	case REG_ID_CMD: apply_cmd(m, value.u16); return true;
 #endif
 
 	case REG_ID_TARGET_POS_32:

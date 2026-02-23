@@ -6,7 +6,9 @@
 
 //declarations functions
 static void StepperMotor_update(StepperMotor* self);
-static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint8_t dir_pin);
+static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint16_t dir_pin,
+	GPIO_TypeDef *en_port, uint16_t en_pin);
+static void StepperMotor_setEnable(StepperMotor* self, bool enable);
 
 
 
@@ -16,6 +18,7 @@ static void StepperMotor_setAllmethods(StepperMotor* self){
 	assert(self);
 	self->update = StepperMotor_update;
 	self->init = StepperMotor_init;
+	self->setEnable = StepperMotor_setEnable;
 
 }
 
@@ -89,16 +92,16 @@ static void StepperMotor_update(StepperMotor* m){
 
 		//выбор направления двиения
 		if(direction == 1){ 
-			LL_GPIO_SetOutputPin(m->dir_port, m->dir_pin_Msk);
+			LL_GPIO_SetOutputPin(m->dir_port, m->dir_pin);
 			p->remaining_steps -= steps_to_move;
 			p->move_total_steps += steps_to_move;
 		} else {
-			LL_GPIO_ResetOutputPin(m->dir_port, m->dir_pin_Msk);
+			LL_GPIO_ResetOutputPin(m->dir_port, m->dir_pin);
 			p->remaining_steps += steps_to_move;
 			p->move_total_steps -= steps_to_move;
 		}
 		if(p->remaining_steps == 0 ){
-			//LL_GPIO_ResetOutputPin(m->dir_port, m->dir_pin_Msk);// дебаг
+			//LL_GPIO_ResetOutputPin(m->dir_port, m->dir_pin);// дебаг
 			p->current_velocity = 0;
 			p->current_acceleration = 0;
 			m->velocityAccumulated = 0;
@@ -111,35 +114,65 @@ static void StepperMotor_update(StepperMotor* m){
 		LL_TIM_SetPrescaler(m->timer, ( timer_clk/(steps_to_move*2) ) );//- 1
     LL_TIM_SetRepetitionCounter(m->timer, steps_to_move - 1);
 		
-    LL_TIM_GenerateEvent_UPDATE(m->timer);
-    LL_TIM_EnableCounter(m->timer);
-		
+		LL_TIM_GenerateEvent_UPDATE(m->timer);
+		LL_TIM_EnableCounter(m->timer);
 	}
 
 	p->target_pos = p->move_total_steps + p->remaining_steps;
+	const uint16_t is_running = (p->remaining_steps != 0) ? 1u : 0u;
+	p->status.bits.running = is_running;
+	p->status.bits.enabled = is_running;
 
 	portEXIT_CRITICAL();
 }
 
 
-static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint8_t dir_pin){
+static void StepperMotor_setEnable(StepperMotor* self, bool enable){
+	assert(self);
+	assert(self->en_port);
+	assert(self->en_pin != 0u);
+
+	if(enable){
+		// NEN is active-low: 0 = enabled, 1 = disabled.
+		LL_GPIO_ResetOutputPin(self->en_port, self->en_pin);
+	} else {
+		LL_GPIO_SetOutputPin(self->en_port, self->en_pin);
+	}
+}
+
+
+static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint16_t dir_pin,
+	GPIO_TypeDef *en_port, uint16_t en_pin){
 	assert(self);
 	assert(timer);
 	assert(dir_port);
-	assert(dir_pin < 16);
+	assert(en_port);
+	assert(dir_pin != 0u);
+	assert(en_pin != 0u);
 
 	self->timer = timer;
 	self->dir_port = dir_port;
-	self->dir_pin_Msk = (1UL << dir_pin);
+	self->dir_pin = dir_pin;
+	self->en_port = en_port;
+	self->en_pin = en_pin;
 
-	LL_GPIO_ResetOutputPin(self->dir_port, self->dir_pin_Msk);
+	LL_GPIO_ResetOutputPin(self->dir_port, self->dir_pin);
 	LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-	GPIO_InitStruct.Pin = self->dir_pin_Msk;
+	GPIO_InitStruct.Pin = self->dir_pin;
 	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
 	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-	GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
 	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
 	HAL_GPIO_Init(self->dir_port, &GPIO_InitStruct);
+	
+
+	GPIO_InitStruct.Pin = self->en_pin;
+	GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
+	GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+	GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
+	GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_MEDIUM;
+	HAL_GPIO_Init(self->en_port, &GPIO_InitStruct);
+	LL_GPIO_SetOutputPin(self->en_port, self->en_pin);
 
 
 /*
@@ -156,7 +189,8 @@ static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeD
 */
 
 
-
+	LL_TIM_CC_EnableChannel(self->timer, LL_TIM_CHANNEL_CH1);
+	LL_TIM_EnableAllOutputs(self->timer);
 }
 
 
@@ -174,8 +208,12 @@ StepperMotor* StepperMotor_create(){
 	assert(motor);
 	memset(motor, 0, sizeof(StepperMotor));
 	StepperMotor_setAllmethods(motor);
-	motor->parameters.max_acceleration =128000;
-	motor->parameters.max_velocity = 16000;
+
+  StepperMotorRegs_t initParameters = {0};
+  initParameters.max_velocity =  (200*64) * 32;
+  initParameters.max_acceleration = (200*64) * 20; //(200*64) * 24
+
+	motor->parameters = initParameters;
 	return motor;
 }
 

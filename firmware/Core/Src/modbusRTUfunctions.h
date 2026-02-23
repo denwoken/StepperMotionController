@@ -76,25 +76,23 @@ static LIGHTMODBUS_RET_ERROR _modbusParseRequest03(
 		const uint16_t addr = (uint16_t)(abs_start + i);
 		reg_lut_t lut = reg_id_from_address(addr);
 		const reg_meta_t* meta = get_reg_meta(lut.reg_id);
-		uint16_t word = 0u;
+		wordData word = {0};
 		if (!meta || lut.reg_id == REG_ID__RESERVED) {
-			word = 0u; // reserved/unreadable -> zero
+			word.u16 = 0u; // reserved/unreadable -> zero
 		} else {
-			wordData val = readRegisterWordData(lut.motor, meta);
+			word = readRegisterWordData(lut.motor, meta);
 			if (meta->words == 2u) {
 				// Write both words at once (low, then high)
 				if ((i + 1u) < count) {
-					modbusWBE(&status->response.pdu[2 + (i << 1)], val.u16w[0]);
-					modbusWBE(&status->response.pdu[2 + ((i + 1u) << 1)], val.u16w[1]);
+					modbusWBE(&status->response.pdu[2 + (i << 1)], word.u16w[0]);
+					modbusWBE(&status->response.pdu[2 + ((i + 1u) << 1)], word.u16w[1]);
 				}
 				i++; // consume next word
 				continue;
-			} else {
-				word = val.u16;
 			}
 		}
 
-		modbusWBE(&status->response.pdu[2 + (i << 1)], word);
+		modbusWBE(&status->response.pdu[2 + (i << 1)], word.u16);
 	}
 
 	deviceRegsSnapshotInvalidate();

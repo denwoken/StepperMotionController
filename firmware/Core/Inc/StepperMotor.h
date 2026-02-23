@@ -3,6 +3,7 @@
 #include "stm32g0xx_ll_gpio.h"
 #include "stm32g071xx.h"
 #include "DeviceRegisters_structs.h"
+#include <stdbool.h>
 
 
 typedef struct{
@@ -37,7 +38,9 @@ struct StepperMotor_ {
 	//void (*move)(StepperMotor* self, int32_t steps);
 	//void (*setVelocity)(StepperMotorPrivate* self, int32_t velocity);
 	//void (*stop)(StepperMotor* self);
-	void (*init)(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint8_t dir_pin);
+	void (*init)(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint16_t dir_pin,
+		GPIO_TypeDef *en_port, uint16_t en_pin);
+	void (*setEnable)(StepperMotor* self, bool enable);
 	void (*update)(StepperMotor* self);
 
 	StepperMotorRegs_t parameters;
@@ -48,7 +51,9 @@ struct StepperMotor_ {
 
 	TIM_TypeDef *timer;
 	GPIO_TypeDef *dir_port;
-	uint16_t dir_pin_Msk;
+	uint16_t dir_pin;
+	GPIO_TypeDef *en_port;
+	uint16_t en_pin;
 };
 
 
