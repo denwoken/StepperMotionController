@@ -10,7 +10,7 @@ typedef struct{
 	MotorStatusReg status;
 	uint16_t error_code;
 	uint16_t mode;
-	uint16_t cmd;
+	//uint16_t cmd;
 
 
 	uint32_t max_velocity;    	// максимальная (шаги/сек)

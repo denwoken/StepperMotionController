@@ -83,13 +83,12 @@ static LIGHTMODBUS_RET_ERROR _modbusParseRequest03(
 			wordData val = readRegisterWordData(lut.motor, meta);
 			if (meta->words == 2u) {
 				// Write both words at once (low, then high)
-				modbusWBE(&status->response.pdu[2 + (i << 1)], val.u16w[0]);
 				if ((i + 1u) < count) {
+					modbusWBE(&status->response.pdu[2 + (i << 1)], val.u16w[0]);
 					modbusWBE(&status->response.pdu[2 + ((i + 1u) << 1)], val.u16w[1]);
-					i++; // consume next word
-					continue;
 				}
-				word = val.u16w[0];
+				i++; // consume next word
+				continue;
 			} else {
 				word = val.u16;
 			}
@@ -225,23 +224,21 @@ static LIGHTMODBUS_RET_ERROR _modbusParseRequest16(
 			return modbusBuildException(status, function, MODBUS_EXCEP_ILLEGAL_ADDRESS);
 		}
 
+		wordData w = {0};
 		if (meta->words == 2u) {
-			wordData w = {0};
+			if(i+1 >= count){
+				portEXIT_CRITICAL();
+				return modbusBuildException(status, function, MODBUS_EXCEP_ILLEGAL_ADDRESS);
+			}
 			w.u16w[0] = modbusRBE(&requestPDU[6 + (i << 1)]);
 			w.u16w[1] = modbusRBE(&requestPDU[6 + ((i + 1u) << 1)]);
-
-			if (!writeRegisterData(lut.motor, meta, w)) {
-				portEXIT_CRITICAL();
-				return modbusBuildException(status, function, MODBUS_EXCEP_ILLEGAL_VALUE);
-			}
+			i++;
 		} else {
-			const uint16_t word = modbusRBE(&requestPDU[6 + (i << 1)]);
-			wordData w = {0};
-			w.u16 = word;
-			if (!writeRegisterData(lut.motor, meta, w)) {
-				portEXIT_CRITICAL();
-				return modbusBuildException(status, function, MODBUS_EXCEP_ILLEGAL_VALUE);
-			}
+			w.u16 = modbusRBE(&requestPDU[6 + (i << 1)]);
+		}
+		if (!writeRegisterData(lut.motor, meta, w)) {
+			portEXIT_CRITICAL();
+			return modbusBuildException(status, function, MODBUS_EXCEP_ILLEGAL_VALUE);
 		}
 	}
 	portEXIT_CRITICAL();

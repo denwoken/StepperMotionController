@@ -16,7 +16,7 @@ typedef struct {
 
 static device_regs_snapshot_t g_snapshot = {0};
 
-
+/*
 static inline int16_t clamp_i32_to_i16(int32_t v)
 {
 	if (v > INT16_MAX) v = INT16_MAX;
@@ -28,8 +28,8 @@ static inline uint16_t clamp_u32_to_u16(uint32_t v)
 {
 	if (v > UINT16_MAX) v = UINT16_MAX;
 	return (uint16_t)v;
-}
-
+}*/
+/*
 static inline wordData pack_word_data(const reg_meta_t* meta, int32_t s, uint32_t u)
 {
 	wordData out = {0};
@@ -45,7 +45,7 @@ static inline wordData pack_word_data(const reg_meta_t* meta, int32_t s, uint32_
 	}
 	return out;
 }
-
+*/
 static void apply_control(StepperMotorParameters* p, uint16_t value)
 {
 	// TODO: implement full control behavior (enable/disable, etc.)
@@ -157,63 +157,32 @@ wordData readRegisterWordData(uint8_t motor, const reg_meta_t* meta)
 		}
 	}
 
-	if (meta->per_motor && !p) {
+	if (meta->per_motor && !p)
 		return out;
-	}
-
-	int32_t s = 0;
-	uint32_t u = 0;
+	
 
 	switch (meta->id) {
-	case REG_ID_DEVICE_ID: u = device_regs->device_id; s = (int32_t)u; break;
-	case REG_ID_FW_VERSION: u = device_regs->fw_version; s = (int32_t)u; break;
-	case REG_ID_MOTOR_COUNT: u = device_regs->motor_count; s = (int32_t)u; break;
+	case REG_ID_DEVICE_ID: out.u16 = device_regs->device_id; break;
+	case REG_ID_FW_VERSION: out.u16 = device_regs->fw_version; break;
+	case REG_ID_MOTOR_COUNT: out.u16 = device_regs->motor_count; break;
 
-	case REG_ID_CONTROL: u = p->control.raw; s = (int32_t)u; break;
-	case REG_ID_STATUS: u = p->status.raw; s = (int32_t)u; break;
-	case REG_ID_ERROR_CODE: u = p->error_code; s = (int32_t)u; break;
-	case REG_ID_MODE: u = p->mode; s = (int32_t)u; break;
+	case REG_ID_CONTROL: out.u16 = p->control.raw; break;
+	case REG_ID_STATUS: out.u16 = p->status.raw; break;
+	case REG_ID_ERROR_CODE: out.u16 = p->error_code; break;
+	case REG_ID_MODE: out.u16 = p->mode; break;
 #if defined(REG_ID_CMD)
-	case REG_ID_CMD: u = 0u; s = 0; break; // write-only
+	case REG_ID_CMD: out.u16 = 0u; break; // write-only
 #endif
 
-	case REG_ID_CURRENT_POS_16: s = (int32_t)clamp_i32_to_i16(p->move_total_steps); u = (uint16_t)s; break;
-	case REG_ID_CURRENT_POS_32: s = p->move_total_steps; u = (uint32_t)s; break;
-
-	case REG_ID_CURRENT_VELOCITY_16:
-		s = (int32_t)clamp_i32_to_i16(p->current_velocity >> REG_VELOCITY16_SCALE_BITS);
-		u = (uint16_t)s;
-		break;
-	case REG_ID_CURRENT_VELOCITY_32: s = p->current_velocity; u = (uint32_t)s; break;
-
-	case REG_ID_CURRENT_ACCEL_16:
-		s = (int32_t)clamp_i32_to_i16(p->current_acceleration >> REG_ACCEL16_SCALE_BITS);
-		u = (uint16_t)s;
-		break;
-	case REG_ID_CURRENT_ACCEL_32: s = p->current_acceleration; u = (uint32_t)s; break;
-
-	case REG_ID_TARGET_POS_16: s = (int32_t)clamp_i32_to_i16(p->target_pos); u = (uint16_t)s; break;
-	case REG_ID_TARGET_POS_32: s = p->target_pos; u = (uint32_t)s; break;
-
-	case REG_ID_MOVE_POS_REL_16: s = 0; u = 0u; break;
-	case REG_ID_MOVE_POS_REL_32: s = 0; u = 0u; break;
-
-	case REG_ID_MAX_VELOCITY_16:
-		u = clamp_u32_to_u16(p->max_velocity >> REG_VELOCITY16_SCALE_BITS);
-		s = (int32_t)u;
-		break;
-	case REG_ID_MAX_VELOCITY_32: u = p->max_velocity; s = (int32_t)u; break;
-
-	case REG_ID_MAX_ACCEL_16:
-		u = clamp_u32_to_u16(p->max_acceleration >> REG_ACCEL16_SCALE_BITS);
-		s = (int32_t)u;
-		break;
-	case REG_ID_MAX_ACCEL_32: u = p->max_acceleration; s = (int32_t)u; break;
-	default:
-		s = 0; u = 0u; break;
+	case REG_ID_CURRENT_POS_32: out.i32 = p->move_total_steps; break;
+	case REG_ID_CURRENT_VELOCITY_32: out.i32 = p->current_velocity; break;
+	case REG_ID_CURRENT_ACCEL_32: out.i32 = p->current_acceleration; break;
+	case REG_ID_TARGET_POS_32: out.i32 = p->target_pos; break;
+	case REG_ID_MOVE_POS_REL_32: out.i32 = 0; break; // write-only
+	case REG_ID_MAX_VELOCITY_32: out.u32 = p->max_velocity; break;
+	case REG_ID_MAX_ACCEL_32: out.u32 = p->max_acceleration; break;
 	}
-
-	return pack_word_data(meta, s, u);
+	return out;
 }
 
 bool writeRegisterData(uint8_t motor, const reg_meta_t* meta, wordData value)
@@ -236,30 +205,18 @@ bool writeRegisterData(uint8_t motor, const reg_meta_t* meta, wordData value)
 	case REG_ID_CMD: apply_cmd(p, value.u16); return true;
 #endif
 
-	case REG_ID_TARGET_POS_16:
-		apply_target_pos(p, value.i16);
-		return true;
 	case REG_ID_TARGET_POS_32:
 		apply_target_pos(p, value.i32);
 		return true;
 
-	case REG_ID_MOVE_POS_REL_16:
-		apply_move_rel(p, value.i16);
-		return true;
 	case REG_ID_MOVE_POS_REL_32:
 		apply_move_rel(p, value.i32);
 		return true;
 
-	case REG_ID_MAX_VELOCITY_16:
-		p->max_velocity = (uint32_t)(value.u16 << REG_VELOCITY16_SCALE_BITS);
-		return true;
 	case REG_ID_MAX_VELOCITY_32:
 		p->max_velocity = value.u32;
 		return true;
 
-	case REG_ID_MAX_ACCEL_16:
-		p->max_acceleration = (uint32_t)(value.u16 << REG_ACCEL16_SCALE_BITS);
-		return true;
 	case REG_ID_MAX_ACCEL_32:
 		p->max_acceleration = value.u32;
 		return true;

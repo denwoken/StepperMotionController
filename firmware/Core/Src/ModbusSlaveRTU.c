@@ -69,15 +69,8 @@ static void modbusSlaveRTU_task(void* pvParameters){
 	ModbusRTU_t *ctx = (ModbusRTU_t *)pvParameters;
 	assert(ctx);
 
-	// while(1){		// uart + dma test
-	// 	uint16_t recv_len = 0;
-	// 	ModbusRTU_Receive(ctx, ctx->rxBuf, sizeof(ctx->rxBuf), &recv_len);
-	// 	memcpy(ctx->txBuf, ctx->rxBuf, recv_len);
-	// 	ModbusRTU_Transmit(ctx, ctx->txBuf, recv_len);
-	// }
 	
 	while(1){
-
 		ModbusErrorInfo err;
 
 		uint16_t recv_len = 0;
@@ -85,9 +78,7 @@ static void modbusSlaveRTU_task(void* pvParameters){
 		
 		uint8_t addr = ctx->rxBuf[0];
 		if(addr == MODBUS_SLAVE_ADRESS || addr == 0){
-
 			err = modbusParseRequestRTU(&ctx->modbus, MODBUS_SLAVE_ADRESS, (uint8_t *)ctx->rxBuf, recv_len);
-
 		}
 		else err = MODBUS_REQUEST_ERROR(ADDRESS);
 
@@ -95,7 +86,6 @@ static void modbusSlaveRTU_task(void* pvParameters){
 			// send response
 			uint8_t *resp = (uint8_t *)modbusSlaveGetResponse(&ctx->modbus);
 			uint16_t resp_len = modbusSlaveGetResponseLength(&ctx->modbus);
-
 			ModbusRTU_Transmit(ctx, resp, resp_len);
 		}
 		else printf("modbus parse error: %d\r\n", err);
@@ -316,8 +306,7 @@ void ModbusRTU_Transmit(ModbusRTU_t *ctx, const uint8_t *data, uint16_t size)
 		LL_DMA_SetDataLength(ctx->dma_tx, ctx->dma_tx_channel, size);
 		LL_DMA_SetMemoryAddress(ctx->dma_tx, ctx->dma_tx_channel, (uint32_t)data);
 
-		
-    	LL_DMA_EnableChannel(ctx->dma_tx, ctx->dma_tx_channel); // Включаем DMA
+    LL_DMA_EnableChannel(ctx->dma_tx, ctx->dma_tx_channel); // Включаем DMA
 		LL_USART_EnableDMAReq_TX(ctx->uart);   // Соединяем UART с DMA
 
 		ModbusRTU_dmaTxCplt_wait(ctx); // Ждем окончания передачи

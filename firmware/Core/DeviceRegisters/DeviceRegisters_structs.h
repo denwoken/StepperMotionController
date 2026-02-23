@@ -58,32 +58,6 @@ typedef struct {
     uint16_t motor_count;
 } DeviceRegs_t;
 
-/*
-typedef struct {
-    MotorControlReg_t control;
-    MotorStatusReg_t status;
-    uint16_t error_code;
-    uint16_t mode;
-
-    int16_t current_pos_16;
-    int16_t current_velocity_16;
-    int16_t current_accel_16;
-    int16_t target_pos_16;
-    int16_t move_pos_rel_16;
-    uint16_t max_velocity_16;
-    uint16_t max_accel_16;
-
-    int32_t current_pos_32;
-    int32_t current_velocity_32;
-    int32_t current_accel_32;
-    int32_t target_pos_32;
-    int32_t move_pos_rel_32;
-    uint32_t max_velocity_32;
-    uint32_t max_accel_32;
-} MotorRegs_t;
-*/
-
-
 // Bit masks
 #define MOTOR_CONTROL_EN_MASK (1u << 0)
 #define MOTOR_STATUS_ENABLED_MASK (1u << 0)

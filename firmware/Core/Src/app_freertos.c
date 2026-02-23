@@ -124,7 +124,8 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-
+  reg_map_init();
+  
   ModbusRTU_t* modbus = ModbusRTUInstance();
 
   ModbusRTU_Init(modbus,
