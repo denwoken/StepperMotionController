@@ -11,121 +11,28 @@
 #include "tim.h"
 
 #include <assert.h>
+#include <stdio.h>
 #include <string.h>
 #include "config.h"
 #include "DeviceRegistersMapper.h"
 #include "StepperMotorController.h"
+#include "modbusRTUfunctions.h"
 
 
 
-ModbusError registerCallback(
-  const ModbusSlave *slave,
-  const ModbusRegisterCallbackArgs *args,
-  ModbusRegisterCallbackResult *result)
+static ModbusError registerCallback(
+	const ModbusSlave *slave,
+	const ModbusRegisterCallbackArgs *args,
+	ModbusRegisterCallbackResult *result)
 {
-	ModbusRTU_t *ctx = (ModbusRTU_t *)modbusSlaveGetUserPointer(slave);
-	result->exceptionCode = MODBUS_EXCEP_NONE;
-	result->value = 0;
-
-	uint8_t motor = 0;
-	reg_id_t regId = get_reg_id_by_address(args->index, &motor);
-
-	if (!ctx || regId == REG__NONE || args->type != MODBUS_HOLDING_REGISTER)
-	{
-		set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
-		return MODBUS_OK;
+	(void)slave;
+	(void)args;
+	if (result) {
+		result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
+		result->value = 0;
 	}
-
-	if(regId == REG__RESERVED){
-		// Reserved addresses: allow read as zero, forbid writes
-		if(args->query == MODBUS_REGQ_W_CHECK || args->query == MODBUS_REGQ_W){
-			set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
-		}
-		return MODBUS_OK;
-	}
-
-	const reg_meta_t* meta = get_reg_meta_by_id(regId);
-	if (meta->motorReg && motor >= ctx->regmap.motor_count) {
-		set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
-		return MODBUS_OK;
-	}
-
-	reg_access_t access = REG_ACC_R;
-	if (!regmap_get_access(motor, regId, &access)) {
-		set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
-		return MODBUS_OK;
-	}
-
-	const reg_word_index_t word = regmap_word_index(args->index, motor, regId);
-
-	if (meta->size == 4u) {
-		if (args->query == MODBUS_REGQ_R_CHECK || args->query == MODBUS_REGQ_R) {
-			if (!ctx->req.valid || !regmap_req_covers_u32(ctx->req.index, ctx->req.count, motor, regId)) {
-				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
-				return MODBUS_OK;
-			}
-		} else {
-			if (ctx->req.function != 16u || !ctx->req.valid || !regmap_req_covers_u32(ctx->req.index, ctx->req.count, motor, regId)) {
-				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_ADDRESS);
-				return MODBUS_OK;
-			}
-		}
-	}
-
-	switch (args->query)
-	{
-	case MODBUS_REGQ_R_CHECK:
-		if(access == REG_ACC_W){
-			result->exceptionCode = MODBUS_EXCEP_NONE;
-			result->value = 0;
-		}
-		break;
-
-	case MODBUS_REGQ_W_CHECK:
-		if(access == REG_ACC_R)
-			set_exception(ctx, result, MODBUS_EXCEP_NACK);
-		break;
-
-	case MODBUS_REGQ_R:
-		if(access == REG_ACC_W){
-			result->value = 0;
-			break;
-		}
-		result->value = regmap_read_snapshot(&ctx->regmap, motor, regId, word);
-		break;
-
-	case MODBUS_REGQ_W:
-		if(access == REG_ACC_R){
-			set_exception(ctx, result, MODBUS_EXCEP_NACK);
-			break;
-		}
-		if (meta->size == 2u) {
-			if (!regmap_write_u16_direct(&ctx->regmap, motor, regId, args->value)) {
-				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
-			}
-		} else if (meta->size == 4u) {
-			if (word != REG_WORD_LO) break;
-			uint16_t lo = 0u;
-			uint16_t hi = 0u;
-			if (!modbus_req_get_u16(ctx, args->index, &lo) ||
-			    !modbus_req_get_u16(ctx, (uint16_t)(args->index + 1u), &hi)) {
-				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
-				break;
-			}
-			uint32_t v = (uint32_t)lo | ((uint32_t)hi << 16);
-			if (!regmap_write_u32_direct(&ctx->regmap, motor, regId, v)) {
-				set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
-			}
-		} else {
-			set_exception(ctx, result, MODBUS_EXCEP_ILLEGAL_VALUE);
-		}
-
-		break;
-	}
-
 	return MODBUS_OK;
 }
-
 
 
 
@@ -158,7 +65,7 @@ static ModbusError staticAllocator(ModbusBuffer *buffer, uint16_t size,void *con
 
 
 
-static modbusSlaveRTU_task(void* pvParameters){
+static void modbusSlaveRTU_task(void* pvParameters){
 	ModbusRTU_t *ctx = (ModbusRTU_t *)pvParameters;
 	assert(ctx);
 
@@ -179,7 +86,6 @@ static modbusSlaveRTU_task(void* pvParameters){
 		uint8_t addr = ctx->rxBuf[0];
 		if(addr == MODBUS_SLAVE_ADRESS || addr == 0){
 
-			modbus_prepare_request(ctx, ctx->rxBuf, recv_len);
 			err = modbusParseRequestRTU(&ctx->modbus, MODBUS_SLAVE_ADRESS, (uint8_t *)ctx->rxBuf, recv_len);
 
 		}
@@ -307,8 +213,8 @@ void ModbusRTU_Init(ModbusRTU_t *ctx,
 		registerCallback,
 		slaveExceptionCallback,
 		staticAllocator,
-		modbusSlaveDefaultFunctions,
-		modbusSlaveDefaultFunctionCount);
+		modbusSlaveMyFunctions,
+		modbusSlaveMyFunctionsCount);
 	modbusSlaveSetUserPointer(&ctx->modbus, ctx);
 	
 	assert(modbusIsOk(err));

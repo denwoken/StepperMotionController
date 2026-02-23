@@ -1,7 +1,7 @@
 #pragma once
 #include "FreeRTOS.h"
 #include "task.h"
-
+#include "config.h"
 #include "StepperMotor.h"
 
 #include "stm32g0xx_ll_tim.h"
