@@ -2,7 +2,7 @@
 #include "stm32g0xx_ll_tim.h"
 #include "stm32g0xx_ll_gpio.h"
 #include "stm32g071xx.h"
-#include "DeviceRegisters_structs.h"
+#include "StepperMotorControllerRegisters_structs.h"
 #include <stdbool.h>
 
 
@@ -62,6 +62,7 @@ struct StepperMotor_ {
 
 StepperMotor* StepperMotor_create();
 void StepperMotor_destroy(StepperMotor* motor);
+
 
 
 

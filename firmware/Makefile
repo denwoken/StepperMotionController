@@ -88,7 +88,7 @@ Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c_ex.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi_ex.c \
-Core/DeviceRegisters/DeviceRegisters_map.c \
+Core/DeviceRegisters/StepperMotorControllerRegisters_map.c \
 Core/DeviceRegisters/DeviceRegistersMapper.c \
 Core/Src/crc.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_crc.c \
@@ -250,3 +250,4 @@ clean:
 -include $(wildcard $(BUILD_DIR)/*.d)
 
 # *** EOF ***
+

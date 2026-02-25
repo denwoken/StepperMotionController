@@ -1,5 +1,5 @@
 #pragma once
-#include "DeviceRegisters_structs.h"
+#include "StepperMotorControllerRegisters_structs.h"
 
 typedef union {
 	uint16_t u16w[2];
@@ -20,3 +20,4 @@ void deviceRegsSnapshotInvalidate(void);
 wordData readRegisterWordData(uint8_t motor, const reg_meta_t* meta);
 
 bool writeRegisterData(uint8_t motor, const reg_meta_t* meta, wordData value);
+

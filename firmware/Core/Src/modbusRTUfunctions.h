@@ -1,7 +1,7 @@
 #pragma once
 
 #include "slave.h"
-#include "DeviceRegisters_map.h"
+#include "StepperMotorControllerRegisters_map.h"
 #include "DeviceRegistersMapper.h"
 #include "FreeRTOS.h"
 
@@ -279,3 +279,4 @@ static ModbusSlaveFunctionHandler modbusSlaveMyFunctions[] =
 };
 static const uint8_t modbusSlaveMyFunctionsCount =
 	sizeof(modbusSlaveMyFunctions) / sizeof(modbusSlaveMyFunctions[0]) - 1;
+

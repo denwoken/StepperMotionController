@@ -1,4 +1,4 @@
-#include "DeviceRegisters_map.h"
+#include "StepperMotorControllerRegisters_map.h"
 #include <stddef.h>
 
 static const reg_meta_t g_reg_meta[REG_ID__COUNT] = {
@@ -94,3 +94,4 @@ bool reg_address_check_range(uint16_t address, uint16_t count) {
     if (end > (uint32_t)REG_ADDR_MAX) return false;
     return true;
 }
+

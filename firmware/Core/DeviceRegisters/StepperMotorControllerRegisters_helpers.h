@@ -1,5 +1,5 @@
 #pragma once
-#include "DeviceRegisters_map.h"
+#include "StepperMotorControllerRegisters_map.h"
 
 // FW_VERSION helpers: high byte = register map version, low byte = firmware version (major*10+minor).
 #define REG_FW_VERSION_PACK(map_ver, fw_ver) \
@@ -176,3 +176,4 @@
 #define REG_M4_MAX_ACCEL_32_OFFSET (uint16_t)((uint16_t)(3) * (uint16_t)REG_SIZE_MAX_ACCEL_32)
 #define REG_M5_MAX_ACCEL_32_ADDR (uint16_t)(REG_BASE_MAX_ACCEL_32 + (uint16_t)(4) * (uint16_t)REG_SIZE_MAX_ACCEL_32)
 #define REG_M5_MAX_ACCEL_32_OFFSET (uint16_t)((uint16_t)(4) * (uint16_t)REG_SIZE_MAX_ACCEL_32)
+

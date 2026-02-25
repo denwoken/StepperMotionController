@@ -1,6 +1,6 @@
 #pragma once
 #include <stdint.h>
-#include "DeviceRegisters_helpers.h"
+#include "StepperMotorControllerRegisters_helpers.h"
 
 // Bitfield views for registers (16-bit)
 typedef union {
@@ -63,3 +63,4 @@ typedef struct {
 #define MOTOR_STATUS_ENABLED_MASK (1u << 0)
 #define MOTOR_STATUS_RUNNING_MASK (1u << 1)
 #define MOTOR_STATUS_FAULT_MASK (1u << 2)
+

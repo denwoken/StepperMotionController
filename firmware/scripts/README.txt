@@ -8,7 +8,7 @@ Files:
 - generateRegistersFiles.bat — runs generation with project parameters.
 
 Run:
-python gen_modbus_regs.py "..\..\DeviceRegisters.xlsx" "..\Core\DeviceRegisters" DeviceRegisters
+python gen_modbus_regs.py "..\..\DeviceRegisters.xlsx" "..\Core\DeviceRegisters" StepperMotorControllerRegisters
 or
 generateRegistersFiles.bat
 
@@ -17,5 +17,9 @@ Requirements:
 - pandas (and an .xlsx engine such as openpyxl)
 
 Output:
-- ..\Core\DeviceRegisters\DeviceRegisters.h
-- ..\Core\DeviceRegisters\DeviceRegisters.c
+- ..\Core\DeviceRegisters\StepperMotorControllerRegisters.h
+- ..\Core\DeviceRegisters\StepperMotorControllerRegisters.c
+
+
+
+
