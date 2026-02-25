@@ -8,81 +8,31 @@
 
 #include "stm32g0xx_ll_dma.h"
 #include "usart.h"
+#include "tim.h"
 
 #include <assert.h>
+#include <stdio.h>
+#include <string.h>
 #include "config.h"
-
-#define HREG_COUNT 16 //Numer of Hold Registers
-#define COIL_COUNT 16 //Numer of Coils
-#define DINP_COUNT 16 //Numer of Discrete Inputs
-#define IREG_COUNT 16 //Numer of (Input Registers
+#include "DeviceRegistersMapper.h"
+#include "StepperMotorController.h"
+#include "modbusRTUfunctions.h"
 
 
 
-  // Регистры ModBus
-  uint16_t hregs[HREG_COUNT];
-  uint8_t  coils[COIL_COUNT/8];
-  uint16_t iregs[IREG_COUNT];
-  uint8_t  dinpt[DINP_COUNT/8];
-
-
-
-ModbusError registerCallback(
-  const ModbusSlave *slave,
-  const ModbusRegisterCallbackArgs *args,
-  ModbusRegisterCallbackResult *result)
+static ModbusError registerCallback(
+	const ModbusSlave *slave,
+	const ModbusRegisterCallbackArgs *args,
+	ModbusRegisterCallbackResult *result)
 {
-  // printf("Modbus registerCallback: type=%d, query=%d, index=%d, value=%d, function=%d\r\n",
-  //   args->type, args->query, args->index, args->value, args->function);
-
-  switch (args->query)
-  {
-	// All regs can be read
-	case MODBUS_REGQ_R_CHECK:
-	if (args->index < HREG_COUNT && args->type == MODBUS_HOLDING_REGISTER)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < IREG_COUNT && args->type == MODBUS_INPUT_REGISTER)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < COIL_COUNT && args->type == MODBUS_COIL)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < DINP_COUNT && args->type == MODBUS_DISCRETE_INPUT)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else	result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
-	break;
-	  
-	// All but two last regs/coils can be written
-   case MODBUS_REGQ_W_CHECK:
-	  // if (args->index < REG_COUNT - 2)
-	if (args->index < HREG_COUNT && args->type == MODBUS_HOLDING_REGISTER)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else  if (args->index < COIL_COUNT && args->type == MODBUS_COIL)	result->exceptionCode = MODBUS_EXCEP_NONE;
-	else	result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
-	break;
-
-	// Read registers
-	case MODBUS_REGQ_R:
-	  switch (args->type)
-	  {
-		case MODBUS_HOLDING_REGISTER: result->value = hregs[args->index]; break;
-		case MODBUS_INPUT_REGISTER: result->value = iregs[args->index]; break;
-		case MODBUS_COIL: result->value = modbusMaskRead(coils, args->index); break;
-		case MODBUS_DISCRETE_INPUT: result->value = modbusMaskRead(dinpt, args->index); break;
-	  }
-	  break;
-
-	// Write registers
-	case MODBUS_REGQ_W:
-	  switch (args->type)
-	  {
-		case MODBUS_HOLDING_REGISTER:
-		{ 
-		  hregs[args->index] = args->value;
-		  break;
-		  }
-		case MODBUS_COIL: modbusMaskWrite(coils, args->index, args->value); break;
-		default: abort(); break;
-	  }
-	  break;
-  }
-	//GPIOA->ODR=coils[0];
-  return MODBUS_OK;
+	(void)slave;
+	(void)args;
+	if (result) {
+		result->exceptionCode = MODBUS_EXCEP_ILLEGAL_ADDRESS;
+		result->value = 0;
+	}
+	return MODBUS_OK;
 }
-
 
 
 
@@ -93,10 +43,7 @@ static ModbusError slaveExceptionCallback(const ModbusSlave *slave, uint8_t func
   return MODBUS_OK;// Always return MODBUS_OK
 }
 
-static ModbusError staticAllocator(
-  ModbusBuffer *buffer,
-  uint16_t size,
-  void *context)
+static ModbusError staticAllocator(ModbusBuffer *buffer, uint16_t size,void *context)
 {
 	ModbusRTU_t *ctx = (ModbusRTU_t*)context;
 	if(ctx){
@@ -118,40 +65,27 @@ static ModbusError staticAllocator(
 
 
 
-
-
-static modbusSlaveRTU_task(void* pvParameters){
+static void modbusSlaveRTU_task(void* pvParameters){
 	ModbusRTU_t *ctx = (ModbusRTU_t *)pvParameters;
 	assert(ctx);
 
-	// while(1){		// тест uart + dma
-	// 	uint16_t recv_len = 0;
-	// 	ModbusRTU_Receive(ctx, ctx->rxBuf, sizeof(ctx->rxBuf), &recv_len);
-	// 	memcpy(ctx->txBuf, ctx->rxBuf, recv_len);
-	// 	ModbusRTU_Transmit(ctx, ctx->txBuf, recv_len);
-	// }
 	
 	while(1){
-
 		ModbusErrorInfo err;
 
 		uint16_t recv_len = 0;
 		ModbusRTU_Receive(ctx, ctx->rxBuf, sizeof(ctx->rxBuf), &recv_len);
-	
-		//memset(buff, 0, sizeof(buff));
-		//memcpy(buff, buf, len);
-		//printf("modbus request: %s, len=%d\r\n", buff, len);
 		
-		//taskENTER_CRITICAL(); // защита регистров на время парсинга
-		// ParceTime 50...70uS /33...44uS
-		err = modbusParseRequestRTU(&ctx->modbus,1, (uint8_t *)ctx->rxBuf, recv_len);
-		//taskEXIT_CRITICAL();
+		uint8_t addr = ctx->rxBuf[0];
+		if(addr == MODBUS_SLAVE_ADRESS || addr == 0){
+			err = modbusParseRequestRTU(&ctx->modbus, MODBUS_SLAVE_ADRESS, (uint8_t *)ctx->rxBuf, recv_len);
+		}
+		else err = MODBUS_REQUEST_ERROR(ADDRESS);
 
 		if (modbusIsOk(err)) {
-			// Отправка ответа
+			// send response
 			uint8_t *resp = (uint8_t *)modbusSlaveGetResponse(&ctx->modbus);
 			uint16_t resp_len = modbusSlaveGetResponseLength(&ctx->modbus);
-
 			ModbusRTU_Transmit(ctx, resp, resp_len);
 		}
 		else printf("modbus parse error: %d\r\n", err);
@@ -269,8 +203,8 @@ void ModbusRTU_Init(ModbusRTU_t *ctx,
 		registerCallback,
 		slaveExceptionCallback,
 		staticAllocator,
-		modbusSlaveDefaultFunctions,
-		modbusSlaveDefaultFunctionCount);
+		modbusSlaveMyFunctions,
+		modbusSlaveMyFunctionsCount);
 	modbusSlaveSetUserPointer(&ctx->modbus, ctx);
 	
 	assert(modbusIsOk(err));
@@ -284,7 +218,7 @@ void ModbusRTU_Init(ModbusRTU_t *ctx,
 	xTaskCreate(
 		modbusSlaveRTU_task, 
 		"ModbusRTU", 
-		128, 
+		256, 
 		ctx, 
 		MODBUS_TASK_PRIORITY, 
 		&ctx->taskHandle
@@ -353,6 +287,7 @@ void ModbusRTU_Transmit(ModbusRTU_t *ctx, const uint8_t *data, uint16_t size)
 	assert(ctx);
 	assert(data);
 
+	LL_USART_ClearFlag_TC(ctx->uart);
 	if (ctx->dma_tx == NULL) 
     {
  		for(uint16_t i = 0; i < size; i++)
@@ -371,11 +306,11 @@ void ModbusRTU_Transmit(ModbusRTU_t *ctx, const uint8_t *data, uint16_t size)
 		LL_DMA_SetDataLength(ctx->dma_tx, ctx->dma_tx_channel, size);
 		LL_DMA_SetMemoryAddress(ctx->dma_tx, ctx->dma_tx_channel, (uint32_t)data);
 
-		
-    	LL_DMA_EnableChannel(ctx->dma_tx, ctx->dma_tx_channel); // Включаем DMA
+    LL_DMA_EnableChannel(ctx->dma_tx, ctx->dma_tx_channel); // Включаем DMA
 		LL_USART_EnableDMAReq_TX(ctx->uart);   // Соединяем UART с DMA
 
 		ModbusRTU_dmaTxCplt_wait(ctx); // Ждем окончания передачи
+		//while(!LL_USART_IsActiveFlag_TC(ctx->uart));
 	}
 }
 void ModbusRTU_Receive(ModbusRTU_t *ctx, uint8_t *data, uint16_t maxSize, uint16_t* rxLen){

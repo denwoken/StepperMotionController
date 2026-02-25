@@ -1,13 +1,13 @@
 #pragma once
 #include "FreeRTOS.h"
 #include "task.h"
-
+#include "config.h"
 #include "StepperMotor.h"
 
 #include "stm32g0xx_ll_tim.h"
 #include "stm32g0xx_ll_gpio.h"
 
-#define MAX_STEPPER_MOTOR_COUNT 6
+#include "DeviceRegistersMapper.h"
 
 
 
@@ -23,7 +23,7 @@ struct StepperMotorController_ {
 	void (*updateMotorsISR)(StepperMotorController* self);
 	void (*notifyTaskISR)(StepperMotorController* self, BaseType_t *pxHigherPriorityTaskWoken );
 
-	
+	DeviceRegs_t deviceRegisters;
 
 	StepperMotor* motors[MAX_STEPPER_MOTOR_COUNT];
 	uint8_t motorCount;

@@ -124,23 +124,60 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void const * argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-
+  reg_map_init();
+  
   ModbusRTU_t* modbus = ModbusRTUInstance();
 
   ModbusRTU_Init(modbus,
           USART1,
+#if USE_DMA_FOR_USART1_MODBUS == 0
+          NULL, 0,
+          NULL, 0,
+#else
           DMA1, LL_DMA_CHANNEL_1,
           DMA1, LL_DMA_CHANNEL_2,
-          1);
+#endif
+          MODBUS_SLAVE_ADRESS);
   
 
   StepperMotorController* controller = getStepperMotorController();  
 
-  StepperMotor* motor = StepperMotor_create();
-  motor->init(motor, TIM15, GPIOC, 0);
+
+
+  StepperMotor* motor1;
+  motor1 = StepperMotor_create();
+  motor1->init(motor1, TIM15, 
+    DRV1_DIR_GPIO_Port, DRV1_DIR_Pin, 
+    DRV1_NEN_GPIO_Port, DRV1_NEN_Pin);
+  controller->addMotor(controller, motor1);
+
+    //debug
+  motor1->setEnable(motor1, true);
+  motor1->parameters.max_velocity = 64000;
+  // motor->parameters.remaining_steps = 1000000000;
+  motor1->parameters.max_acceleration = 16*1000;
+  //debug
+
+  
+  StepperMotor* motor;
+  motor = StepperMotor_create();
+  motor->init(motor, TIM16, 
+    DRV2_DIR_GPIO_Port, DRV2_DIR_Pin, 
+    DRV2_NEN_GPIO_Port, DRV2_NEN_Pin);
   controller->addMotor(controller, motor);
-  motor->max_velocity =  256000;//(200*64) * 31;
-  motor->max_acceleration = (200*64) * 24;
+
+  //debug
+  motor->setEnable(motor, true);
+  motor->parameters.max_velocity = 16000;
+  motor->parameters.remaining_steps = 1000000000;
+  motor->parameters.max_acceleration = 32000;
+  //debug
+
+  motor = StepperMotor_create();
+  motor->init(motor, TIM17, 
+    DRV3_DIR_GPIO_Port, DRV3_DIR_Pin, 
+    DRV3_NEN_GPIO_Port, DRV3_NEN_Pin);
+  controller->addMotor(controller, motor);
 
   controller->init(controller, TIM6);
   controller->startTimer(controller);
@@ -154,13 +191,14 @@ void StartDefaultTask(void const * argument)
     osDelay(2);
 
     portENTER_CRITICAL();
-    if(motor->remaining_steps == 0 && motor->current_velocity == 0){//
+    if(motor1->parameters.remaining_steps == 0 && 
+       motor1->parameters.current_velocity == 0){//
       //motor1.d_set = -motor1.d_set;
       // portEXIT_CRITICAL();
       // osDelay(2000);
       // portENTER_CRITICAL();
-      motor->remaining_steps = 64*dir;
-      //motor->remaining_steps = (200*64) *1* dir;
+      motor1->parameters.remaining_steps = 10000*dir;
+      //motor->parameters.remaining_steps = (200*64) *1* dir;
       if(dir == 1) dir = -1; else dir = 1;
     }
     portEXIT_CRITICAL();
