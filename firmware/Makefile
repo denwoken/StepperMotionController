@@ -30,6 +30,7 @@ OPT = -Og
 #######################################
 # Build path
 BUILD_DIR = build
+VERSION_HEADER = Core/Inc/git_version.h
 
 ######################################
 # source
@@ -207,7 +208,7 @@ vpath %.s $(sort $(dir $(ASM_SOURCES)))
 OBJECTS += $(addprefix $(BUILD_DIR)/,$(notdir $(ASMM_SOURCES:.S=.o)))
 vpath %.S $(sort $(dir $(ASMM_SOURCES)))
 
-$(BUILD_DIR)/%.o: %.c Makefile | $(BUILD_DIR) 
+$(BUILD_DIR)/%.o: %.c Makefile $(VERSION_HEADER) | $(BUILD_DIR) 
 	$(CC) -c $(CFLAGS) $< -o $@
 #	$(CC) -c $(CFLAGS) -Wa,-a,-ad,-alms=$(BUILD_DIR)/$(notdir $(<:.c=.lst)) $< -o $@
 
@@ -215,6 +216,12 @@ $(BUILD_DIR)/%.o: %.s Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
 $(BUILD_DIR)/%.o: %.S Makefile | $(BUILD_DIR)
 	$(AS) -c $(CFLAGS) $< -o $@
+
+$(VERSION_HEADER): FORCE
+	powershell -NoProfile -ExecutionPolicy Bypass -File scripts/gen_git_version.ps1 "$(VERSION_HEADER)"
+
+.PHONY: FORCE
+FORCE:
 
 $(BUILD_DIR)/$(TARGET).elf: $(OBJECTS) Makefile
 	$(CC) $(OBJECTS) $(LDFLAGS) -o $@

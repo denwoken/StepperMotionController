@@ -4,7 +4,9 @@
 #include <assert.h>
 #include <memory.h>
 #include "config.h"
+#include "git_version.h"
 #include "main.h"
+
 //declarations functions
 static void StepperMotorController_addMotor(StepperMotorController* self, StepperMotor* motor);
 static void StepperMotorController_startTimer(StepperMotorController* self);
@@ -105,7 +107,7 @@ static void StepperMotorController_updateMotors(StepperMotorController* self){
 		StepperMotor* motor = self->motors[i];
 		motor->restartMotorTimer(motor);
 	}
-	LL_GPIO_ResetOutputPin(PC11_GPIO_Port, PC11_Pin);
+	STEPPER_MOTOR_CONTROLLER_TIMERS_UPDATED_HOOK();
 	portEXIT_CRITICAL();
 }
 static void StepperMotorController_updateMotorsISR(StepperMotorController* self){
@@ -118,7 +120,7 @@ static void StepperMotorController_updateMotorsISR(StepperMotorController* self)
 }
 static void StepperMotorController_notifyTaskISR(StepperMotorController* self, BaseType_t *pxHigherPriorityTaskWoken ){
 	assert(self);
-	LL_GPIO_SetOutputPin(PC11_GPIO_Port, PC11_Pin);
+	STEPPER_MOTOR_CONTROLLER_IRQ_START_HOOK();
 	if(LL_TIM_IsActiveFlag_UPDATE(self->updateTimer))
 	{
     LL_TIM_ClearFlag_UPDATE(self->updateTimer);
@@ -149,7 +151,8 @@ StepperMotorController* StepperMotorController_create(){
 	StepperMotorController_setAllmethods(controller);
 
 	controller->deviceRegisters.device_id = 0xA7B4;
-	controller->deviceRegisters.fw_version = (0x00 << 8) | 0x01;
+	controller->deviceRegisters.fw_version =
+		REG_FW_VERSION_PACK(REG_MAP_VERSION, FW_VERSION_NUM);
 	controller->deviceRegisters.motor_count = REG_MOTOR_COUNT;
 	return controller;
 }

@@ -1,6 +1,14 @@
 #pragma once
 #include "DeviceRegisters_map.h"
 
+// FW_VERSION helpers: high byte = register map version, low byte = firmware version (major*10+minor).
+#define REG_FW_VERSION_PACK(map_ver, fw_ver) \
+	((uint16_t)((((uint16_t)(map_ver) & 0xFFu) << 8) | ((uint16_t)(fw_ver) & 0xFFu)))
+#define REG_FW_VERSION_MAP(ver_u16) ((uint8_t)(((uint16_t)(ver_u16) >> 8) & 0xFFu))
+#define REG_FW_VERSION_SW(ver_u16)  ((uint8_t)((uint16_t)(ver_u16) & 0xFFu))
+#define REG_FW_VERSION_MAJOR(ver_u16) ((uint8_t)(REG_FW_VERSION_SW(ver_u16) / 10u))
+#define REG_FW_VERSION_MINOR(ver_u16) ((uint8_t)(REG_FW_VERSION_SW(ver_u16) % 10u))
+
 // Helper macros for register addresses/sizes.
 // - REG_SIZE_* is in 16-bit Modbus words (1 for 16-bit, 2 for 32-bit).
 // - Motors in helper macros REG_Mx_* are 1-based in the name, but internally use 0-based indexing.
@@ -168,4 +176,3 @@
 #define REG_M4_MAX_ACCEL_32_OFFSET (uint16_t)((uint16_t)(3) * (uint16_t)REG_SIZE_MAX_ACCEL_32)
 #define REG_M5_MAX_ACCEL_32_ADDR (uint16_t)(REG_BASE_MAX_ACCEL_32 + (uint16_t)(4) * (uint16_t)REG_SIZE_MAX_ACCEL_32)
 #define REG_M5_MAX_ACCEL_32_OFFSET (uint16_t)((uint16_t)(4) * (uint16_t)REG_SIZE_MAX_ACCEL_32)
-

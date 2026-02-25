@@ -17,6 +17,9 @@ extern "C" {
 #define REG_ADDR_MAX	(40101U)
 #define REG_ADDR_SPAN	(102U)
 
+
+#define REG_MAP_VERSION 1
+
 /* Register access level: read/write/read-write */
 typedef enum {
     REG_ACC_R  = 1,
