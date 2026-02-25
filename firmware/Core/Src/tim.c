@@ -211,7 +211,7 @@ void MX_TIM6_Init(void)
   LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM6);
 
   /* TIM6 interrupt Init */
-  NVIC_SetPriority(TIM6_DAC_LPTIM1_IRQn, 2);
+  NVIC_SetPriority(TIM6_DAC_LPTIM1_IRQn, 3);
   NVIC_EnableIRQ(TIM6_DAC_LPTIM1_IRQn);
 
   /* USER CODE BEGIN TIM6_Init 1 */

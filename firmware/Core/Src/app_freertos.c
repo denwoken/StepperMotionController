@@ -144,21 +144,22 @@ void StartDefaultTask(void const * argument)
 
 
 
-  StepperMotor* motor;
-  motor = StepperMotor_create();
-  motor->init(motor, TIM15, 
+  StepperMotor* motor1;
+  motor1 = StepperMotor_create();
+  motor1->init(motor1, TIM15, 
     DRV1_DIR_GPIO_Port, DRV1_DIR_Pin, 
     DRV1_NEN_GPIO_Port, DRV1_NEN_Pin);
-  controller->addMotor(controller, motor);
+  controller->addMotor(controller, motor1);
 
     //debug
-  // motor->setEnable(motor, true);
-  // motor->parameters.max_velocity = 16000;
+  motor1->setEnable(motor1, true);
+  motor1->parameters.max_velocity = 64000;
   // motor->parameters.remaining_steps = 1000000000;
-  // motor->parameters.max_acceleration = 32000;
+  motor1->parameters.max_acceleration = 16*1000;
   //debug
 
   
+  StepperMotor* motor;
   motor = StepperMotor_create();
   motor->init(motor, TIM16, 
     DRV2_DIR_GPIO_Port, DRV2_DIR_Pin, 
@@ -187,16 +188,16 @@ void StartDefaultTask(void const * argument)
   for(;;)
   {
     //printf("Default Task is running.\n");
-    osDelay(5000000);
+    osDelay(2);
 
     portENTER_CRITICAL();
-    if(motor->parameters.remaining_steps == 0 && 
-       motor->parameters.current_velocity == 0){//
+    if(motor1->parameters.remaining_steps == 0 && 
+       motor1->parameters.current_velocity == 0){//
       //motor1.d_set = -motor1.d_set;
       // portEXIT_CRITICAL();
       // osDelay(2000);
       // portENTER_CRITICAL();
-      motor->parameters.remaining_steps = 10000*dir;
+      motor1->parameters.remaining_steps = 10000*dir;
       //motor->parameters.remaining_steps = (200*64) *1* dir;
       if(dir == 1) dir = -1; else dir = 1;
     }

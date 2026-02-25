@@ -41,7 +41,7 @@ extern CRC_HandleTypeDef hcrc;
 void MX_CRC_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+uint16_t hwCalcCrc(uint8_t *d, int bytes);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

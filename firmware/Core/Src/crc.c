@@ -19,7 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "crc.h"
-
+#include "config.h"
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -38,10 +38,12 @@ void MX_CRC_Init(void)
 
   /* USER CODE END CRC_Init 1 */
   hcrc.Instance = CRC;
-  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_DISABLE;
   hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
-  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_NONE;
-  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_DISABLE;
+  hcrc.Init.GeneratingPolynomial = 32773;
+  hcrc.Init.CRCLength = CRC_POLYLENGTH_16B;
+  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_BYTE;
+  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_ENABLE;
   hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_HALFWORDS;
   if (HAL_CRC_Init(&hcrc) != HAL_OK)
   {
@@ -86,5 +88,18 @@ void HAL_CRC_MspDeInit(CRC_HandleTypeDef* crcHandle)
 }
 
 /* USER CODE BEGIN 1 */
-
+uint16_t hwCalcCrc(uint8_t *d, int bytes) 
+{
+    int i;
+    hcrc.Instance->CR |= 1;// Reset the calculator
+    for (i=0; i<bytes; i++)
+     *(__IO uint8_t *)(__IO void *)(&hcrc.Instance->DR) = d[i];
+    return hcrc.Instance->DR;
+}
+#if USE_HW_CRC_UNIT == 1
+uint16_t modbusCRC(const uint8_t *data, uint16_t length)
+{
+  return hwCalcCrc(data, length);
+}
+#endif
 /* USER CODE END 1 */

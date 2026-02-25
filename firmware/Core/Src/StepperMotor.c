@@ -48,10 +48,12 @@ static void StepperMotor_update(StepperMotor* m){
 
 	
 
+	
+
 	// ускорение за тик + аккумулируем значение если дробное
 	int32_t total_acc = p->max_acceleration + m->accelerationAccumulated; 
 	int32_t accel_per_tick =  total_acc / 1000;
-	int32_t accel_signed = 0;
+	int32_t accel_sign = 0;
 	m->accelerationAccumulated = total_acc % 1000;
 
 
@@ -60,22 +62,22 @@ static void StepperMotor_update(StepperMotor* m){
 	{ // шагов нужно выполнить меньше чем нужно для тормаения
 		//  ==> тормозим
 		p->current_velocity = _max(0, p->current_velocity - accel_per_tick);
-		accel_signed = -accel_per_tick;		
+		accel_sign = -1;
 	}
 	else if (p->current_velocity < p->max_velocity){
 		// или если это не максимальная скорость  ==> ускоряемся
 		p->current_velocity = _min(p->max_velocity, p->current_velocity + accel_per_tick);
-		accel_signed = accel_per_tick;		
+		accel_sign = 1;
 	}
 	else if (p->current_velocity > p->max_velocity)
 	{ // если vmax изменили в меньшую сторону ==> тормозим
 		p->current_velocity = _max(p->max_velocity, p->current_velocity - accel_per_tick);
-		accel_signed = -accel_per_tick;
+		accel_sign = -1;
 	}
 
 
 	// шаги/тик + аккумулируем значение если дробное
-	p->current_acceleration = accel_signed * 1000;
+	p->current_acceleration = accel_sign * (int32_t)p->max_acceleration;
 
 	int32_t total_vel = p->current_velocity + m->velocityAccumulated;
 	int32_t vel_per_tick = total_vel / 1000;
@@ -120,6 +122,13 @@ static void StepperMotor_update(StepperMotor* m){
 		m->pendingTimerRestart = true;
 
 	} else m->pendingTimerRestart = false;
+
+	if (vel_per_tick == 0 && p->remaining_steps == 0) {
+		p->current_velocity = 0;
+		p->current_acceleration = 0;
+		m->velocityAccumulated = 0;
+		m->accelerationAccumulated = 0;
+	}
 
 	p->target_pos = p->move_total_steps + p->remaining_steps;
 	const uint16_t is_running = (p->remaining_steps != 0) ? 1u : 0u;
