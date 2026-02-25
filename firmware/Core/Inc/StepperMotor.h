@@ -42,6 +42,7 @@ struct StepperMotor_ {
 		GPIO_TypeDef *en_port, uint16_t en_pin);
 	void (*setEnable)(StepperMotor* self, bool enable);
 	void (*update)(StepperMotor* self);
+	void (*restartMotorTimer)(StepperMotor* self);
 
 	StepperMotorRegs_t parameters;
 
@@ -54,6 +55,8 @@ struct StepperMotor_ {
 	uint16_t dir_pin;
 	GPIO_TypeDef *en_port;
 	uint16_t en_pin;
+
+	bool pendingTimerRestart ;
 };
 
 

@@ -9,7 +9,7 @@ static void StepperMotor_update(StepperMotor* self);
 static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint16_t dir_pin,
 	GPIO_TypeDef *en_port, uint16_t en_pin);
 static void StepperMotor_setEnable(StepperMotor* self, bool enable);
-
+static void StepperMotor_restartMotorTimer(StepperMotor* self);
 
 
 
@@ -19,6 +19,7 @@ static void StepperMotor_setAllmethods(StepperMotor* self){
 	self->update = StepperMotor_update;
 	self->init = StepperMotor_init;
 	self->setEnable = StepperMotor_setEnable;
+	self->restartMotorTimer = StepperMotor_restartMotorTimer;
 
 }
 
@@ -30,7 +31,7 @@ static inline int32_t _max(int32_t a, int32_t b){ return a > b ? a : b; }
 // methods
 static void StepperMotor_update(StepperMotor* m){
 	StepperMotorParameters* p = &m->parameters;
-	portENTER_CRITICAL();
+	//portENTER_CRITICAL();
 
 	int8_t direction = (p->remaining_steps > 0) ? (1) : (-1);
 
@@ -112,18 +113,20 @@ static void StepperMotor_update(StepperMotor* m){
 		//LL_TIM_DisableCounter(m->timer);
 		static const uint32_t timer_clk = 64000; // кГц
 		LL_TIM_SetPrescaler(m->timer, ( timer_clk/(steps_to_move*2) ) );//- 1
-    LL_TIM_SetRepetitionCounter(m->timer, steps_to_move - 1);
+    LL_TIM_SetRepetitionCounter(m->timer, steps_to_move - 1);//
 		
-		LL_TIM_GenerateEvent_UPDATE(m->timer);
-		LL_TIM_EnableCounter(m->timer);
-	}
+		//LL_TIM_GenerateEvent_UPDATE(m->timer);
+		//LL_TIM_EnableCounter(m->timer);
+		m->pendingTimerRestart = true;
+
+	} else m->pendingTimerRestart = false;
 
 	p->target_pos = p->move_total_steps + p->remaining_steps;
 	const uint16_t is_running = (p->remaining_steps != 0) ? 1u : 0u;
 	p->status.bits.running = is_running;
 	p->status.bits.enabled = is_running;
 
-	portEXIT_CRITICAL();
+	//portEXIT_CRITICAL();
 }
 
 
@@ -196,12 +199,6 @@ static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeD
 
 
 
-
-
-
-
-
-
 // functions for creation & destraction
 StepperMotor* StepperMotor_create(){
 	StepperMotor* motor = pvPortMalloc(sizeof(StepperMotor));
@@ -223,3 +220,11 @@ void StepperMotor_destroy(StepperMotor* motor){
 }
 
 
+static void StepperMotor_restartMotorTimer(StepperMotor* self){
+	if(self->pendingTimerRestart)
+	{
+		LL_TIM_DisableCounter(self->timer);
+	  LL_TIM_GenerateEvent_UPDATE(self->timer);
+		LL_TIM_EnableCounter(self->timer);
+	}
+}

@@ -4,7 +4,7 @@
 #include <assert.h>
 #include <memory.h>
 #include "config.h"
-
+#include "main.h"
 //declarations functions
 static void StepperMotorController_addMotor(StepperMotorController* self, StepperMotor* motor);
 static void StepperMotorController_startTimer(StepperMotorController* self);
@@ -64,11 +64,12 @@ static void StepperMotorController_init(StepperMotorController* self, TIM_TypeDe
 		vTaskDelete(self->taskHandle);
 		self->taskHandle = NULL;
 	}
+#if MOTION_PROFILE_RECALC_IN_TASK == 1
 	BaseType_t ret = 
 	xTaskCreate (	
 		(TaskFunction_t)StepperMotorController_Task,
 		"StepperMotorController", 
-		128, 
+		256, 
 		self, 
 		MOTOR_CONTROLLER_TIMER_ISR_PRIORITY, 
 		&self->taskHandle
@@ -77,7 +78,7 @@ static void StepperMotorController_init(StepperMotorController* self, TIM_TypeDe
 		printf("StepperMotorController task creation error %ld\r\n", ret);
 		abort();
 	}
-
+#endif
 }
 static void StepperMotorController_startTimer(StepperMotorController* self){
 	assert(self);
@@ -93,14 +94,23 @@ static void StepperMotorController_stopTimer(StepperMotorController* self){
 }
 static void StepperMotorController_updateMotors(StepperMotorController* self){
 	assert(self);
+	portENTER_CRITICAL();
+	//recalc motion profilers
 	for(int i = 0; i < self->motorCount; i++){
 		StepperMotor* motor = self->motors[i];
-		assert(motor);
 		motor->update(motor);
 	}
+	//exec pending timer enabling for sync
+	for(int i = 0; i < self->motorCount; i++){
+		StepperMotor* motor = self->motors[i];
+		motor->restartMotorTimer(motor);
+	}
+	LL_GPIO_ResetOutputPin(PC11_GPIO_Port, PC11_Pin);
+	portEXIT_CRITICAL();
 }
 static void StepperMotorController_updateMotorsISR(StepperMotorController* self){
 	assert(self);
+
 	if(LL_TIM_IsActiveFlag_UPDATE(self->updateTimer)){
     LL_TIM_ClearFlag_UPDATE(self->updateTimer);
 		StepperMotorController_updateMotors(self);
@@ -108,6 +118,7 @@ static void StepperMotorController_updateMotorsISR(StepperMotorController* self)
 }
 static void StepperMotorController_notifyTaskISR(StepperMotorController* self, BaseType_t *pxHigherPriorityTaskWoken ){
 	assert(self);
+	LL_GPIO_SetOutputPin(PC11_GPIO_Port, PC11_Pin);
 	if(LL_TIM_IsActiveFlag_UPDATE(self->updateTimer))
 	{
     LL_TIM_ClearFlag_UPDATE(self->updateTimer);
@@ -122,9 +133,6 @@ static void StepperMotorController_Task(void* pvParameters){
 	//uint8_t buff[100];
 	while(1){
 		ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-		// for(int i = 0; i < sizeof(buff); i++) {  // Правильное условие
-    //   buff[i] = i;  // Простая операция
-    // }
 		controller->updateMotors(controller);
 	}
 }

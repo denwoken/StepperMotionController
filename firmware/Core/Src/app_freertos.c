@@ -151,12 +151,26 @@ void StartDefaultTask(void const * argument)
     DRV1_NEN_GPIO_Port, DRV1_NEN_Pin);
   controller->addMotor(controller, motor);
 
+    //debug
+  // motor->setEnable(motor, true);
+  // motor->parameters.max_velocity = 16000;
+  // motor->parameters.remaining_steps = 1000000000;
+  // motor->parameters.max_acceleration = 32000;
+  //debug
+
   
   motor = StepperMotor_create();
   motor->init(motor, TIM16, 
     DRV2_DIR_GPIO_Port, DRV2_DIR_Pin, 
     DRV2_NEN_GPIO_Port, DRV2_NEN_Pin);
   controller->addMotor(controller, motor);
+
+  //debug
+  motor->setEnable(motor, true);
+  motor->parameters.max_velocity = 16000;
+  motor->parameters.remaining_steps = 1000000000;
+  motor->parameters.max_acceleration = 32000;
+  //debug
 
   motor = StepperMotor_create();
   motor->init(motor, TIM17, 

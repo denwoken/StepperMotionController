@@ -26,6 +26,7 @@
 /* USER CODE BEGIN Includes */
 #include "ModbusSlaveRTU.h"
 #include "StepperMotorController.h"
+#include "config.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -173,13 +174,17 @@ void TIM6_DAC_LPTIM1_IRQHandler(void)
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   StepperMotorController* controller = getStepperMotorController();  
   //controller->updateMotors(controller);
+#if MOTION_PROFILE_RECALC_IN_TASK == 1
   controller->notifyTaskISR(controller, &xHigherPriorityTaskWoken);
-
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+#else
+  controller->updateMotorsISR(controller);
+#endif
   /* USER CODE END TIM6_DAC_LPTIM1_IRQn 0 */
 
   /* USER CODE BEGIN TIM6_DAC_LPTIM1_IRQn 1 */
 
-  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  
 
   /* USER CODE END TIM6_DAC_LPTIM1_IRQn 1 */
 }

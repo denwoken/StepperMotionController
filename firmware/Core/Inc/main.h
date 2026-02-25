@@ -69,6 +69,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define PC11_Pin LL_GPIO_PIN_11
+#define PC11_GPIO_Port GPIOC
+#define PC12_Pin LL_GPIO_PIN_12
+#define PC12_GPIO_Port GPIOC
+#define PC13_Pin LL_GPIO_PIN_13
+#define PC13_GPIO_Port GPIOC
+#define PC14_Pin LL_GPIO_PIN_14
+#define PC14_GPIO_Port GPIOC
+#define PC15_Pin LL_GPIO_PIN_15
+#define PC15_GPIO_Port GPIOC
 #define DRV1_DIR_Pin LL_GPIO_PIN_0
 #define DRV1_DIR_GPIO_Port GPIOC
 #define DRV1_NEN_Pin LL_GPIO_PIN_2
