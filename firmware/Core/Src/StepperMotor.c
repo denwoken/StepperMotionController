@@ -11,6 +11,11 @@ static void StepperMotor_init(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeD
 static void StepperMotor_setEnable(StepperMotor* self, bool enable);
 static void StepperMotor_restartMotorTimer(StepperMotor* self);
 
+static void StepperMotor_apply_control(StepperMotor* m, uint16_t value);
+static void StepperMotor_apply_mode(StepperMotor* m, uint16_t value);
+static void StepperMotor_apply_target_pos(StepperMotor* m, int32_t target);
+static void StepperMotor_apply_move_rel(StepperMotor* m, int32_t move);
+
 
 
 // link methods to class
@@ -21,12 +26,90 @@ static void StepperMotor_setAllmethods(StepperMotor* self){
 	self->setEnable = StepperMotor_setEnable;
 	self->restartMotorTimer = StepperMotor_restartMotorTimer;
 
+	self->apply_control = StepperMotor_apply_control;
+	self->apply_mode = StepperMotor_apply_mode;
+	self->apply_target_pos = StepperMotor_apply_target_pos;
+	self->apply_move_rel = StepperMotor_apply_move_rel;
+
 }
 
 
 static inline int32_t _abs(int32_t x){ return x < 0 ? -x : x; }
 static inline int32_t _min(int32_t a, int32_t b){ return a < b ? a : b; }
 static inline int32_t _max(int32_t a, int32_t b){ return a > b ? a : b; }
+
+const int s_max_velocity = 256000;
+
+
+static void StepperMotor_apply_control(StepperMotor* m, uint16_t value)
+{
+	StepperMotorParameters* p = &m->parameters;
+	
+	// TODO: implement full control behavior (enable/disable, etc.)
+	p->control.raw = value;
+
+	m->setEnable(m, (bool)(value & MOTOR_CONTROL_EN_MASK));
+
+	// Simple sketch: mirror enable bit into status and stop on disable.
+	if ((value & MOTOR_CONTROL_EN_MASK)) {
+		
+		// p->remaining_steps = 0;
+		// p->current_velocity = 0;
+		// p->current_acceleration = 0;
+		// p->move_pos_rel = 0;
+		// p->target_pos = p->move_total_steps;
+		// p->status.bits.running = 0u;
+	}
+	//p->status.bits.enabled = (value & MOTOR_CONTROL_EN_MASK) ? 1u : 0u;
+}
+
+static void StepperMotor_apply_mode(StepperMotor* m, uint16_t value)
+{
+	StepperMotorParameters* p = &m->parameters;
+	// TODO: define mode semantics (position/velocity/step, etc.)
+	p->mode = value;
+}
+
+
+#if defined(REG_ID_CMD)
+static void StepperMotor_apply_cmd(StepperMotor* m, uint16_t value)
+{
+	const StepperMotorParameters* p = &m->parameters;
+	// Write-only command register sketch.
+	// TODO: replace with real command decoding.
+	p->cmd = value;
+	if (value & 0x0001u) {
+		// CMD bit0: stop motion (placeholder action)
+		p->remaining_steps = 0;
+		p->current_velocity = 0;
+		p->current_acceleration = 0;
+		p->move_pos_rel = 0;
+		p->target_pos = p->move_total_steps;
+		p->status.bits.running = 0u;
+	}
+}
+#endif
+
+static void StepperMotor_apply_target_pos(StepperMotor* m, int32_t target)
+{
+	StepperMotorParameters* p = &m->parameters;
+	p->target_pos = target;
+	p->remaining_steps = p->target_pos - p->move_total_steps;
+}
+
+static void StepperMotor_apply_move_rel(StepperMotor* m, int32_t move)
+{
+	StepperMotorParameters* p = &m->parameters;
+	p->remaining_steps += move;
+	p->target_pos = p->move_total_steps + p->remaining_steps;
+}
+
+
+
+
+
+
+
 
 // methods
 static void StepperMotor_update(StepperMotor* m){
@@ -49,7 +132,7 @@ static void StepperMotor_update(StepperMotor* m){
 	
 
 	
-
+	//p->current_acceleration
 	// ускорение за тик + аккумулируем значение если дробное
 	int32_t total_acc = p->max_acceleration + m->accelerationAccumulated; 
 	int32_t accel_per_tick =  total_acc / 1000;
@@ -64,7 +147,7 @@ static void StepperMotor_update(StepperMotor* m){
 		p->current_velocity = _max(0, p->current_velocity - accel_per_tick);
 		accel_sign = -1;
 	}
-	else if (p->current_velocity < p->max_velocity){
+	else if (p->current_velocity < p->max_velocity ){
 		// или если это не максимальная скорость  ==> ускоряемся
 		p->current_velocity = _min(p->max_velocity, p->current_velocity + accel_per_tick);
 		accel_sign = 1;
@@ -215,9 +298,12 @@ StepperMotor* StepperMotor_create(){
 	memset(motor, 0, sizeof(StepperMotor));
 	StepperMotor_setAllmethods(motor);
 
+	int microstep = 64;
+	int step_per_ratio = 200;
+
   StepperMotorRegs_t initParameters = {0};
-  initParameters.max_velocity =  (200*64) * 32;
-  initParameters.max_acceleration = (200*64) * 20; //(200*64) * 24
+  initParameters.max_velocity =  (step_per_ratio*microstep) * 8;
+  initParameters.max_acceleration = (step_per_ratio*microstep) * 32;
 
 	motor->parameters = initParameters;
 	return motor;

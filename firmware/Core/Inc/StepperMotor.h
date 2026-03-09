@@ -23,7 +23,7 @@ typedef struct{
 	int32_t move_total_steps;   // Общее количество выполняных шагов
 	int32_t remaining_steps;    // Сколько шагов осталось в текущем перемещении
 
-	int32_t move_pos_rel;
+
 
 }StepperMotorRegs_t;
 
@@ -38,11 +38,16 @@ struct StepperMotor_ {
 	//void (*move)(StepperMotor* self, int32_t steps);
 	//void (*setVelocity)(StepperMotorPrivate* self, int32_t velocity);
 	//void (*stop)(StepperMotor* self);
-	void (*init)(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint16_t dir_pin,
-		GPIO_TypeDef *en_port, uint16_t en_pin);
+	void (*init)(StepperMotor* self, TIM_TypeDef *timer, GPIO_TypeDef *dir_port, uint16_t dir_pin, GPIO_TypeDef *en_port, uint16_t en_pin);
 	void (*setEnable)(StepperMotor* self, bool enable);
 	void (*update)(StepperMotor* self);
 	void (*restartMotorTimer)(StepperMotor* self);
+
+
+	void (*apply_control)(StepperMotor* m, uint16_t value);
+	void (*apply_mode)(StepperMotor* m, uint16_t value);
+	void (*apply_target_pos)(StepperMotor* m, int32_t target);
+	void (*apply_move_rel)(StepperMotor* m, int32_t move);
 
 	StepperMotorRegs_t parameters;
 

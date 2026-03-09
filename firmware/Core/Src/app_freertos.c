@@ -144,27 +144,27 @@ void StartDefaultTask(void const * argument)
 
 
 
-  StepperMotor* motor1;
-  motor1 = StepperMotor_create();
-  motor1->init(motor1, TIM15, 
+  StepperMotor* motor0;
+  motor0 = StepperMotor_create();
+  motor0->init(motor0, TIM15, 
     DRV1_DIR_GPIO_Port, DRV1_DIR_Pin, 
     DRV1_NEN_GPIO_Port, DRV1_NEN_Pin);
-  controller->addMotor(controller, motor1);
+  controller->addMotor(controller, motor0);
 
   //debug
   //motor1->setEnable(motor1, true);
-  //motor1->parameters.max_velocity = 64000;
+  motor0->parameters.max_velocity = 64000;
   // motor->parameters.remaining_steps = 1000000000;
-  //motor1->parameters.max_acceleration = 16*1000;
+  motor0->parameters.max_acceleration = 16*1000;
   //debug
 
   
-  StepperMotor* motor;
-  motor = StepperMotor_create();
-  motor->init(motor, TIM16, 
+  StepperMotor* motor1;
+  motor1 = StepperMotor_create();
+  motor1->init(motor1, TIM16, 
     DRV2_DIR_GPIO_Port, DRV2_DIR_Pin, 
     DRV2_NEN_GPIO_Port, DRV2_NEN_Pin);
-  controller->addMotor(controller, motor);
+  controller->addMotor(controller, motor1);
 
   //debug
   // motor->setEnable(motor, true);
@@ -172,27 +172,71 @@ void StartDefaultTask(void const * argument)
   // motor->parameters.remaining_steps = 1000000000;
   // motor->parameters.max_acceleration = 32000;
   //debug
-
-  motor = StepperMotor_create();
-  motor->init(motor, TIM17, 
+  StepperMotor* motor2;
+  motor2 = StepperMotor_create();
+  motor2->init(motor2, TIM17, 
     DRV3_DIR_GPIO_Port, DRV3_DIR_Pin, 
     DRV3_NEN_GPIO_Port, DRV3_NEN_Pin);
-  controller->addMotor(controller, motor);
+  controller->addMotor(controller, motor2);
+
+
 
   controller->init(controller, TIM6);
   controller->startTimer(controller);
 
-  //osThreadTerminate(osThreadGetId()); 
+  osThreadTerminate(osThreadGetId()); 
   /* Infinite loop */
-  int8_t dir = 1;
+  //int8_t dir = 1;
+  motor0->setEnable(motor0, true);
   for(;;)
   {
     //printf("Default Task is running.\n");
-    osDelay(20000000);
+   // osDelay(2);
 
+   int min = -16000;
+   int max = 16000;
+
+    StepperMotorParameters* p = &motor0->parameters;
+    // wait the end of movement
     portENTER_CRITICAL();
-    if(motor1->parameters.remaining_steps == 0 && 
-       motor1->parameters.current_velocity == 0){//
+
+    motor0->apply_target_pos(motor0, max);
+
+    while(p->remaining_steps != 0  || p->current_velocity != 0){
+      portEXIT_CRITICAL(); osDelay(1); portENTER_CRITICAL();
+    } 
+    portEXIT_CRITICAL();osDelay(500);portENTER_CRITICAL();
+
+    motor0->apply_target_pos(motor0, (max+min)/2);
+
+    while(p->remaining_steps != 0 || p->current_velocity != 0){
+      portEXIT_CRITICAL(); osDelay(1); portENTER_CRITICAL();
+    } 
+    portEXIT_CRITICAL();osDelay(500);portENTER_CRITICAL();
+
+    motor0->apply_target_pos(motor0, -min);
+
+    while(p->remaining_steps != 0 || p->current_velocity != 0){
+      portEXIT_CRITICAL(); osDelay(1); portENTER_CRITICAL();
+    } 
+    portEXIT_CRITICAL();osDelay(500);portENTER_CRITICAL();
+
+    motor0->apply_target_pos(motor0, (max+min)/2);
+
+    while(p->remaining_steps != 0 || p->current_velocity != 0){
+      portEXIT_CRITICAL(); osDelay(1); portENTER_CRITICAL();
+    } 
+    portEXIT_CRITICAL();osDelay(500);portENTER_CRITICAL();
+
+    portEXIT_CRITICAL();
+
+
+
+
+
+/*
+    portENTER_CRITICAL();
+    if(motor1->parameters.remaining_steps == 0 && motor1->parameters.current_velocity == 0){
       //motor1.d_set = -motor1.d_set;
       // portEXIT_CRITICAL();
       // osDelay(2000);
@@ -202,7 +246,7 @@ void StartDefaultTask(void const * argument)
       if(dir == 1) dir = -1; else dir = 1;
     }
     portEXIT_CRITICAL();
-    
+    */
   }
   /* USER CODE END StartDefaultTask */
 }
