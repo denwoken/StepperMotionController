@@ -151,11 +151,11 @@ void StartDefaultTask(void const * argument)
     DRV1_NEN_GPIO_Port, DRV1_NEN_Pin);
   controller->addMotor(controller, motor1);
 
-    //debug
-  motor1->setEnable(motor1, true);
-  motor1->parameters.max_velocity = 64000;
+  //debug
+  //motor1->setEnable(motor1, true);
+  //motor1->parameters.max_velocity = 64000;
   // motor->parameters.remaining_steps = 1000000000;
-  motor1->parameters.max_acceleration = 16*1000;
+  //motor1->parameters.max_acceleration = 16*1000;
   //debug
 
   
@@ -167,10 +167,10 @@ void StartDefaultTask(void const * argument)
   controller->addMotor(controller, motor);
 
   //debug
-  motor->setEnable(motor, true);
-  motor->parameters.max_velocity = 16000;
-  motor->parameters.remaining_steps = 1000000000;
-  motor->parameters.max_acceleration = 32000;
+  // motor->setEnable(motor, true);
+  // motor->parameters.max_velocity = 16000;
+  // motor->parameters.remaining_steps = 1000000000;
+  // motor->parameters.max_acceleration = 32000;
   //debug
 
   motor = StepperMotor_create();
@@ -188,7 +188,7 @@ void StartDefaultTask(void const * argument)
   for(;;)
   {
     //printf("Default Task is running.\n");
-    osDelay(2);
+    osDelay(20000000);
 
     portENTER_CRITICAL();
     if(motor1->parameters.remaining_steps == 0 && 
