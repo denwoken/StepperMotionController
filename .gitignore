@@ -2,6 +2,8 @@
 firmware/build/*
 Altium/History/*
 Altium/Project Logs for StepperMotionController/*
+controller_sdk/python/stepper_controller/__pycache__*
+~*
 
 # Prerequisites
 *.d
