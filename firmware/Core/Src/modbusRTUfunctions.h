@@ -82,17 +82,18 @@ static LIGHTMODBUS_RET_ERROR _modbusParseRequest03(
 		} else {
 			word = readRegisterWordData(lut.motor, meta);
 			if (meta->words == 2u) {
-				// Write both words at once (low, then high)
+				
 				if ((i + 1u) < count) {
-					modbusWBE(&status->response.pdu[2 + (i << 1)], word.u16w[0]);
-					modbusWBE(&status->response.pdu[2 + ((i + 1u) << 1)], word.u16w[1]);
+					// Write both words at once (low, then high)
+					modbusWBE(&((uint16_t*)status->response.pdu)[1 + i], word.u16w[0]);
+					modbusWBE(&((uint16_t*)status->response.pdu)[1 + i+1], word.u16w[1]);
 				}
 				i++; // consume next word
 				continue;
 			}
 		}
 
-		modbusWBE(&status->response.pdu[2 + (i << 1)], word.u16);
+		modbusWBE(&((uint16_t*)status->response.pdu)[1 + i], word.u16);
 	}
 
 	deviceRegsSnapshotInvalidate();
@@ -228,11 +229,12 @@ static LIGHTMODBUS_RET_ERROR _modbusParseRequest16(
 				portEXIT_CRITICAL();
 				return modbusBuildException(status, function, MODBUS_EXCEP_ILLEGAL_ADDRESS);
 			}
-			w.u16w[0] = modbusRBE(&requestPDU[6 + (i << 1)]);
-			w.u16w[1] = modbusRBE(&requestPDU[6 + ((i + 1u) << 1)]);
+			// read two words  (low, then high)
+			w.u16w[0] = modbusRBE(&((uint16_t*)requestPDU)[3 + i]);
+			w.u16w[1] = modbusRBE(&((uint16_t*)requestPDU)[3 + i+1]);
 			i++;
 		} else {
-			w.u16 = modbusRBE(&requestPDU[6 + (i << 1)]);
+			w.u16 = modbusRBE(&((uint16_t*)requestPDU)[3 + i]);
 		}
 		if (!writeRegisterData(lut.motor, meta, w)) {
 			portEXIT_CRITICAL();
