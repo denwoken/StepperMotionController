@@ -50,9 +50,14 @@ def main() -> None:
             print(f"Position: {position}")
 
 
-            print("Move +2000 steps")
+            print("Move +64000 steps")
             motor.move_relative(64000)
-            time.sleep(3)
+
+            # wait the end of movement
+            status = motor.read_status()
+            while status["running"] == True:
+                status = motor.read_status()
+                #time.sleep(0.001)
 
             motor.enable(False)
 
