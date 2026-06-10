@@ -1,26 +1,23 @@
 #####################################################################
 # Git LFS: common rule template
 #####################################################################
-
 #####################################################################
 # Altium / ECAD project sources (binary)
 #####################################################################
-*.SchDoc   filter=lfs diff=lfs merge=lfs -text
-*.PcbDoc   filter=lfs diff=lfs merge=lfs -text
-*.PrjPcb   filter=lfs diff=lfs merge=lfs -text
-*.PcbLib   filter=lfs diff=lfs merge=lfs -text
-*.SchLib   filter=lfs diff=lfs merge=lfs -text
+*.SchDoc filter=lfs diff=lfs merge=lfs -text
+*.PcbDoc filter=lfs diff=lfs merge=lfs -text
+*.PrjPcb filter=lfs diff=lfs merge=lfs -text
+*.PcbLib filter=lfs diff=lfs merge=lfs -text
+*.SchLib filter=lfs diff=lfs merge=lfs -text
 *.SCHLIB   filter=lfs diff=lfs merge=lfs -text
-*.IntLib   filter=lfs diff=lfs merge=lfs -text
+*.IntLib filter=lfs diff=lfs merge=lfs -text
 *.apr      filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # Reports / exports
 #####################################################################
-*.REP      filter=lfs diff=lfs merge=lfs -text
+*.REP filter=lfs diff=lfs merge=lfs -text
 *.EXTREP   filter=lfs diff=lfs merge=lfs -text
 *.pdf      filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # Gerber / NC Drill (CAM outputs)
 # (замена твоего *.G* на безопасные маски)
@@ -30,7 +27,6 @@
 *.GBR      filter=lfs diff=lfs merge=lfs -text
 *.ger      filter=lfs diff=lfs merge=lfs -text
 *.GER      filter=lfs diff=lfs merge=lfs -text
-
 # Top/Bottom copper / mask / silkscreen / paste (часто встречается)
 *.gtl      filter=lfs diff=lfs merge=lfs -text
 *.gbl      filter=lfs diff=lfs merge=lfs -text
@@ -40,27 +36,24 @@
 *.gbo      filter=lfs diff=lfs merge=lfs -text
 *.gpt      filter=lfs diff=lfs merge=lfs -text
 *.gpb      filter=lfs diff=lfs merge=lfs -text
-*.GTL      filter=lfs diff=lfs merge=lfs -text
-*.GBL      filter=lfs diff=lfs merge=lfs -text
-*.GTS      filter=lfs diff=lfs merge=lfs -text
-*.GBS      filter=lfs diff=lfs merge=lfs -text
-*.GTO      filter=lfs diff=lfs merge=lfs -text
-*.GBO      filter=lfs diff=lfs merge=lfs -text
+*.GTL filter=lfs diff=lfs merge=lfs -text
+*.GBL filter=lfs diff=lfs merge=lfs -text
+*.GTS filter=lfs diff=lfs merge=lfs -text
+*.GBS filter=lfs diff=lfs merge=lfs -text
+*.GTO filter=lfs diff=lfs merge=lfs -text
+*.GBO filter=lfs diff=lfs merge=lfs -text
 *.GPT      filter=lfs diff=lfs merge=lfs -text
 *.GPB      filter=lfs diff=lfs merge=lfs -text
-
 # Mechanical / outline / keepout (встречается у фабрик)
 *.gko      filter=lfs diff=lfs merge=lfs -text
-*.GKO      filter=lfs diff=lfs merge=lfs -text
+*.GKO filter=lfs diff=lfs merge=lfs -text
 *.gm1      filter=lfs diff=lfs merge=lfs -text
-*.GM1      filter=lfs diff=lfs merge=lfs -text
-
+*.GM1 filter=lfs diff=lfs merge=lfs -text
 # NC Drill
 *.drl      filter=lfs diff=lfs merge=lfs -text
-*.DRL      filter=lfs diff=lfs merge=lfs -text
+*.DRL filter=lfs diff=lfs merge=lfs -text
 *.xln      filter=lfs diff=lfs merge=lfs -text
 *.XLN      filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # Archives / packages
 #####################################################################
@@ -68,7 +61,6 @@
 *.ZIP      filter=lfs diff=lfs merge=lfs -text
 *.rar      filter=lfs diff=lfs merge=lfs -text
 *.RAR      filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # Firmware / build artifacts (binary)
 #####################################################################
@@ -77,7 +69,6 @@
 *.map      filter=lfs diff=lfs merge=lfs -text
 *.o        filter=lfs diff=lfs merge=lfs -text
 *.d        filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # Media assets
 #####################################################################
@@ -85,7 +76,6 @@
 *.jpeg     filter=lfs diff=lfs merge=lfs -text
 *.png      filter=lfs diff=lfs merge=lfs -text
 *.bmp      filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # Office docs
 #####################################################################
@@ -93,9 +83,28 @@
 *.docx     filter=lfs diff=lfs merge=lfs -text
 *.xlsx     filter=lfs diff=lfs merge=lfs -text
 *.pptx     filter=lfs diff=lfs merge=lfs -text
-
 #####################################################################
 # (Optional) Altium backups (если ты реально хочешь их в LFS)
 #####################################################################
 *.mbp      filter=lfs diff=lfs merge=lfs -text
 *.mbw      filter=lfs diff=lfs merge=lfs -text
+*.OutJob filter=lfs diff=lfs merge=lfs -text
+*.DsnWrk filter=lfs diff=lfs merge=lfs -text
+*.Draftsman filter=lfs diff=lfs merge=lfs -text
+*.BomDoc filter=lfs diff=lfs merge=lfs -text
+*.Gerber filter=lfs diff=lfs merge=lfs -text
+*.GBP filter=lfs diff=lfs merge=lfs -text
+*.GML filter=lfs diff=lfs merge=lfs -text
+*.GTP filter=lfs diff=lfs merge=lfs -text
+*.G1 filter=lfs diff=lfs merge=lfs -text
+*.G2 filter=lfs diff=lfs merge=lfs -text
+*.TXT filter=lfs diff=lfs merge=lfs -text
+*.RUL filter=lfs diff=lfs merge=lfs -text
+*.xls filter=lfs diff=lfs merge=lfs -text
+*.csv filter=lfs diff=lfs merge=lfs -text
+*.7z filter=lfs diff=lfs merge=lfs -text
+*.step filter=lfs diff=lfs merge=lfs -text
+*.stp filter=lfs diff=lfs merge=lfs -text
+*.iges filter=lfs diff=lfs merge=lfs -text
+*.igs filter=lfs diff=lfs merge=lfs -text
+*.obj filter=lfs diff=lfs merge=lfs -text
