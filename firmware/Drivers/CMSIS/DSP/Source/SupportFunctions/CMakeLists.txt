@@ -1,16 +1,3 @@
-cmake_minimum_required (VERSION 3.6)
-
-project(CMSISDSPSupport)
-
-
-file(GLOB SRC "./*_*.c")
-
-add_library(CMSISDSPSupport STATIC ${SRC})
-
-configdsp(CMSISDSPSupport ..)
-
-### Includes
-target_include_directories(CMSISDSPSupport PUBLIC "${DSP}/../../Include")
-
-
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:6a741a6e5791a7e43d68ece22936016ae04a5989cfa3762f07108fab5fe962af
+size 272

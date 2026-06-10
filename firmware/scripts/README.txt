@@ -1,25 +1,3 @@
-Scripts
-
-Purpose:
-Generate Modbus register C files from an Excel table.
-
-Files:
-- gen_modbus_regs.py — reads .xlsx and generates .h/.c.
-- generateRegistersFiles.bat — runs generation with project parameters.
-
-Run:
-python gen_modbus_regs.py "..\..\DeviceRegisters.xlsx" "..\Core\DeviceRegisters" StepperMotorControllerRegisters
-or
-generateRegistersFiles.bat
-
-Requirements:
-- Python 3
-- pandas (and an .xlsx engine such as openpyxl)
-
-Output:
-- ..\Core\DeviceRegisters\StepperMotorControllerRegisters.h
-- ..\Core\DeviceRegisters\StepperMotorControllerRegisters.c
-
-
-
-DEPRECATED!!!!
+version https://git-lfs.github.com/spec/v1
+oid sha256:234eb3c34bf409893ffa7e80eba2f451b8a3d7bc189f4950fec76e44a58f3726
+size 605

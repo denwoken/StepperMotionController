@@ -1,12 +1,3 @@
-Output: NC Drill Files
-Type  : NC Drill
-From  : PCB Document [PCB1.PcbDoc]
-   Generated File[PCB1.TXT]
-   Generated File[PCB1.LDP]
-   Generated File[PCB1.DRR]
-
-
-Files Generated   : 3
-Documents Printed : 0
-
-Finished Output Generation At 17:38:03 On 25.11.2025
+version https://git-lfs.github.com/spec/v1
+oid sha256:ce1944e46ddc33abeba2764a963bc457dc89575ef0bec23d8e77b52e7cce1ee0
+size 291

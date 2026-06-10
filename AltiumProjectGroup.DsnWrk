@@ -1,6 +1,3 @@
-[ProjectGroup]
-Version=1.0
-[Project1]
-ProjectPath=.\Altium\Projects\StepperMotionController\StepperMotionController.PrjPcb
-[Project2]
-ProjectPath=Altium\StepperMotionController.PrjPcb
+version https://git-lfs.github.com/spec/v1
+oid sha256:a4e923fe731f73fc5a933b6cf834933a5dc2442956351acca32ee5f7ece3c289
+size 190
