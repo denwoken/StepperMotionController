@@ -123,7 +123,7 @@ LIGHTMODBUS_WARN_UNUSED ModbusError modbusBufferAllocateADU(ModbusBuffer *buffer
 	\param length Number of bytes, starting at the `data` pointer, to process
 	\returns 16-bit Modbus CRC value
 */
-LIGHTMODBUS_WARN_UNUSED uint16_t modbusCRC(const uint8_t *data, uint16_t length)
+LIGHTMODBUS_WARN_UNUSED __weak uint16_t modbusCRC(const uint8_t *data, uint16_t length)
 {
 	static const uint16_t table[256] = {
 	0x0000, 0xC0C1, 0xC181, 0x0140, 0xC301, 0x03C0, 0x0280, 0xC241,

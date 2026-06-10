@@ -1,16 +1,3 @@
-cmake_minimum_required (VERSION 3.6)
-
-project(CMSISDSPMatrix)
-
-
-file(GLOB SRC "./*_*.c")
-
-add_library(CMSISDSPMatrix STATIC ${SRC})
-
-configdsp(CMSISDSPMatrix ..)
-
-### Includes
-target_include_directories(CMSISDSPMatrix PUBLIC "${DSP}/../../Include")
-
-
-
+version https://git-lfs.github.com/spec/v1
+oid sha256:84f7dbcde5e4a66bee22df75b44160e49a5a7c88fcc6579ee2bfb73a4b759d42
+size 268
