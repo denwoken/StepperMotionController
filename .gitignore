@@ -1,48 +1,183 @@
+# ============================================================
+# OS / editor temporary files
+# ============================================================
 
-firmware/build/*
-Altium/History/*
-Altium/Project Logs for StepperMotionController/*
-controller_sdk/python/stepper_controller/__pycache__*
 ~*
+*.tmp
+*.temp
+*.bak
+*.bkp
+*.old
+*.orig
+*.swp
+*.swo
+Thumbs.db
+.DS_Store
+desktop.ini
 
-# Prerequisites
+
+# ============================================================
+# Altium Designer temporary/cache files
+# ============================================================
+
+Altium/History/
+Altium/Project Logs for */
+Altium/__Previews__/
+
+*.PrjPCBStructure
+*.PcbDocPreview
+*.SchDocPreview
+
+# Altium generated HTML previews/reports
+*.PcbDoc.htm
+*.SchDoc.htm
+
+# Altium backup/temporary files
+*.~*
+.~lock*
+
+# Осторожно: слишком широкие правила.
+# Включай их только если точно знаешь, что такие файлы у тебя мусор:
+*.Dat
+*.LOG
+*.log
+*.err
+
+
+# ============================================================
+# C / C++ / STM32 build files
+# ============================================================
+
+firmware/build/
+firmware/Debug/
+firmware/Release/
+
+build/
+Debug/
+Release/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+
+
+# Make / dependency files
 *.d
+*.dep
 
-# Compiled Object files
+# Compiled object files
 *.slo
 *.lo
 *.o
 *.obj
 
-# Precompiled Headers
+# Precompiled headers
 *.gch
 *.pch
 
-# Linker files
+# Linker / debug files
 *.ilk
-
-# Debugger Files
 *.pdb
+*.dwo
 
-# Compiled Dynamic libraries
+# Libraries
 *.so
 *.dylib
 *.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
 *.lai
 *.la
 *.a
 *.lib
 
-# Executables
+# Executables / firmware outputs
 *.exe
 *.out
 *.app
+*.elf
+*.hex
+*.bin
+*.map
+*.lst
 
-# debug information files
-*.dwo
+# ARM / STM32 generated analysis/coverage files
+*.su
+*.cyclo
+*.gcda
+*.gcno
+*.gcov
+
+
+# ============================================================
+# IDE files
+# ============================================================
+
+# VS Code
+# Храним полезные проектные конфиги, игнорируем остальное.
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# JetBrains IDE
+.idea/
+
+# Eclipse / STM32CubeIDE
+.metadata/
+.pydevproject
+
+
+# ============================================================
+# Python
+# ============================================================
+
+__pycache__/
+*/__pycache__/
+
+*.py[cod]
+*$py.class
+
+.venv/
+venv/
+env/
+ENV/
+
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+dist/
+*.egg-info/
+pip-wheel-metadata/
+
+.ipynb_checkpoints/
+
+
+# ============================================================
+# SolidWorks
+# ============================================================
+
+# SolidWorks backup / temporary files
+~$*
+*.sldprt.bak
+*.sldasm.bak
+*.slddrw.bak
+*.SLDPRT.bak
+*.SLDASM.bak
+*.SLDDRW.bak
+
+# SolidWorks Simulation / cache / result files
+# Обычно это тяжёлые пересоздаваемые результаты расчёта.
+*.cwr
+*.fld
+*.rpt
+*.sta
+*.mesh
+*.msh
+*.bcf
+*.ldf
+*.hgf
+
